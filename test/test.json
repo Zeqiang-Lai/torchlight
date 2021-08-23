@@ -1,0 +1,11 @@
+{
+    "save_dir": ".",
+    "name": "test",
+    "trainer": {
+        "type": "x"
+    },
+    "Optimizer": {
+        "type": "Adam",
+        "lr": 1e-4
+    }
+}

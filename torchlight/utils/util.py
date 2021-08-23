@@ -7,6 +7,19 @@ from pathlib import Path
 from itertools import repeat
 from collections import OrderedDict
 from numpy import inf
+import numpy as np
+
+def setup_mannul_seed(seed):
+    torch.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+
+def adjust_learning_rate(optimizer, lr):    
+    print('Adjust Learning Rate => %.4e' %lr)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+        # param_group['initial_lr'] = lr
 
 def ensure_dir(dirname):
     dirname = Path(dirname)
@@ -45,33 +58,36 @@ def prepare_device(n_gpu_use):
     list_ids = list(range(n_gpu_use))
     return device, list_ids
 
+
 class MetricTracker:
-    def __init__(self, *keys, writer=None):
+    def __init__(self, writer=None):
         self.writer = writer
-        self._data = pd.DataFrame(index=keys, columns=['total', 'counts', 'average'])
+        self._data = {}
         self.reset()
 
     def reset(self):
-        for col in self._data.columns:
-            self._data[col].values[:] = 0
-
+        self._data = {}
+        
     def update(self, key, value, n=1):
         if self.writer is not None:
             self.writer.add_scalar(key, value)
-        self._data.total[key] += value * n
-        self._data.counts[key] += n
-        self._data.average[key] = self._data.total[key] / self._data.counts[key]
+        if key not in self._data.keys():
+            self._data[key] = {'total': 0, 'count': 0}
+        self._data[key]['total'] += value * n
+        self._data[key]['count'] += n
 
     def avg(self, key):
-        return self._data.average[key]
+        return self._data[key]['total'] / self._data[key]['count']
 
     def result(self):
-        return dict(self._data.average)
-
-    def summary(self):
-        items = ['{}: {:.4f}'.format(k, v) for k, v in self.result().items()]
-        return ' '.join(items)
+        return {k: self._data[k]['total'] / self._data[k]['count'] for k in self._data.keys()}
     
+    def summary(self):
+        items = ['{}: {:.8f}'.format(k, v) for k, v in self.result().items()]
+        return ' '.join(items)
+
+        
+        
 class PerformanceMonitor:
     def __init__(self, mnt_mode, early_stop_threshold):
         self.mnt_mode = mnt_mode

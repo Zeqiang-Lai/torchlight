@@ -1,0 +1,8 @@
+save_dir: '.'
+name: "test"
+trainer:
+  type: 'aaa'
+  name: 'ffff'
+optimizer:
+  type: 'adam'
+  name: 'ff'
