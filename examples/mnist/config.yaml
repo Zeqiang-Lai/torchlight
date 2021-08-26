@@ -1,3 +1,13 @@
 engine:
-  max_epochs: 5
+  max_epochs: 1
   log_img_step: 100
+
+module:
+  lr: 0.001
+  
+train_loader:
+  batch_size: 64
+
+test_loader:
+  batch_size: 64
+  shuffle: False

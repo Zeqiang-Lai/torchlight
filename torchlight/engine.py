@@ -1,71 +1,59 @@
+from typing import NamedTuple
+from pathlib import Path
+
 import torch
 from torchvision.utils import make_grid
 from tqdm import tqdm
-from pathlib import Path
+from numpy import inf
 
-from .utils.logging.logger import Logger
-from .utils.util import PerformanceMonitor
-from .utils import MetricTracker
+from .logging.logger import Logger
 from .module import Module
+
 
 class Experiment:
     def __init__(self, save_dir):
         self.save_dir = Path(save_dir)
         self.log_dir = self.save_dir / 'log'
         self.ckpt_dir = self.save_dir / 'ckpt'
-        
+
     def create(self):
         self.log_dir.mkdir(exist_ok=True, parents=True)
         self.ckpt_dir.mkdir(exist_ok=True, parents=True)
         return self
 
-class EngineConfig:
-    max_epochs = 10
-    log_step = 20
-    log_img_step = 20
-    save_per_epoch = 1
-    valid_per_epoch = 1
-    
-    mnt_mode = 'min'
-    mnt_metric = 'loss'
-    
-    
-    @classmethod
-    def update(cls, new:dict):
-        for k, v in new.items():
-            if hasattr(cls, k):
-                setattr(cls, k, v)
-    
-    @classmethod
-    def save(cls, path):
-        pass
 
+class EngineConfig(NamedTuple):
+    max_epochs: int = 10
+    log_step: int = 20
+    log_img_step: int = 20
+    save_per_epoch: int = 1
+    valid_per_epoch: int = 1
 
-def _progress(batch_idx, loader):
-    current = batch_idx * loader.batch_size
-    total = len(loader) * loader.batch_size
-    return '[{}/{} ({:.0f}%)]'.format(current, total, 100.0 * current / total)
+    mnt_mode: str = 'min'
+    mnt_metric: str = 'loss'
 
 
 class Engine:
-    def __init__(self, module:Module, save_dir):
+    def __init__(self, module: Module, save_dir):
         self.module = module
         self.experiment = Experiment(save_dir).create()
-        self.cfg = EngineConfig
+        self.cfg = EngineConfig()
         self.logger = Logger(self.experiment.log_dir)
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
         self.start_epoch = 1
-    
-    def config(self, cfg:dict):
-        EngineConfig.update(cfg)
+
+    def config(self, **kwargs):
+        self.cfg = EngineConfig(**kwargs)
         return self
-    
-    def resume(self, model_name):
-        resume_path = self.experiment.ckpt_dir / 'model-{}.pth'.format(model_name)
+
+    def resume(self, model_name, base_dir=None):
+        ckpt_dir = self.experiment.ckpt_dir if base_dir is None else Experiment(
+            base_dir).ckpt_dir
+        resume_path = ckpt_dir / 'model-{}.pth'.format(model_name)
         assert resume_path.exists(), '{} not found'.format(resume_path)
         self._resume_checkpoint(resume_path)
         return self
-    
+
     def train(self, train_loader, valid_loader=None):
         """
         Full training logic
@@ -81,8 +69,8 @@ class Engine:
             # print logged informations to the screen
             if valid_loader is not None and epoch % self.cfg.valid_per_epoch == 0:
                 val_log = self._valid_epoch(epoch, valid_loader)
-                log.update(**{'val_'+k : v for k, v in val_log.items()})
-            
+                log.update(**{'val_'+k: v for k, v in val_log.items()})
+
             for key, value in log.items():
                 self.logger.info('    {:15s}: {}'.format(str(key), value))
 
@@ -94,21 +82,19 @@ class Engine:
             #         self.logger.info("Validation performance didn\'t improve for {} epochs. "
             #                          "Training stops.".format(self.early_stop))
             #         break
-            
+
             # save checkpoint
             if epoch % self.cfg.save_per_epoch == 0:
                 is_best = self.monitor.is_best() if self.cfg.mnt_mode != 'off' else False
                 self._save_checkpoint(epoch, save_best=is_best)
-        
-        
+
     def test(self, test_loader):
-        val_log = self._valid_epoch(0, test_loader)
-        log = {'val_'+k : v for k, v in val_log.items()}
-            
+        val_log = self._valid_epoch(1, test_loader)
+        log = {'val_'+k: v for k, v in val_log.items()}
+
         for key, value in log.items():
             self.logger.info('    {:15s}: {}'.format(str(key), value))
-    
-    
+
     def _train_epoch(self, epoch, train_loader):
         """
         Training logic for an epoch
@@ -118,12 +104,13 @@ class Engine:
         ric in this epoch.
         """
         metric_tracker = MetricTracker()
-        
+
         len_epoch = len(train_loader)
         pbar = tqdm(total=len_epoch)
         for batch_idx, data in enumerate(train_loader):
             gstep = (epoch - 1) * len_epoch + batch_idx + 1
-            results = self.module.step(data, train=True, epoch=epoch, step=gstep)
+            results = self.module.step(
+                data, train=True, epoch=epoch, step=gstep)
 
             # self.logger.tensorboard.set_step(gstep, 'train')
             for name, value in results.metrics.items():
@@ -132,19 +119,22 @@ class Engine:
 
             if gstep % self.cfg.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} {}'.format(epoch,
-                                                                 _progress(batch_idx, train_loader),
+                                                                 _progress(
+                                                                     batch_idx, train_loader),
                                                                  metric_tracker.summary()))
             if gstep % self.cfg.log_img_step == 0:
                 for name, img in results.imgs.items():
                     img_name = '{}_{}_{}.png'.format(name, epoch, gstep)
-                    self.logger.save_img(img_name, make_grid(img.cpu(), nrow=8, normalize=True))
-            
-            pbar.set_postfix({'epoch': epoch, 'metrics': metric_tracker.summary()})
+                    self.logger.save_img(img_name, make_grid(
+                        img, nrow=8, normalize=True))
+
+            pbar.set_postfix(
+                {'epoch': epoch, 'metrics': metric_tracker.summary()})
             pbar.update()
-            
+
         pbar.close()
-        self.module.on_epoch_end(train=True)   
-         
+        self.module.on_epoch_end(train=True)
+
         return metric_tracker.result()
 
     def _valid_epoch(self, epoch, valid_loader):
@@ -153,24 +143,32 @@ class Engine:
 
         :param epoch: Integer, current training epoch.
         :return: A log that contains information about validation
-        """ 
+        """
         metric_tracker = MetricTracker()
-         
+
+        len_epoch = len(valid_loader)
+        pbar = tqdm(total=len_epoch)
         with torch.no_grad():
             len_epoch = len(valid_loader)
             for batch_idx, data in enumerate(valid_loader):
-                gstep = (epoch - 1) * len_epoch + batch_idx + 1 
-                results = self.module.step(data, train=False, epoch=epoch, step=gstep)
-                
+                gstep = (epoch - 1) * len_epoch + batch_idx + 1
+                results = self.module.step(
+                    data, train=False, epoch=epoch, step=gstep)
+
                 for name, value in results.metrics.items():
                     metric_tracker.update(name, value, gstep)
-                
+
                 for name, img in results.imgs.items():
                     img_name = 'valid_{}_{}_{}.png'.format(name, epoch, gstep)
-                    self.logger.save_img(img_name, make_grid(img.cpu(), nrow=8, normalize=True))
-                
+                    self.logger.save_img(img_name, make_grid(
+                        img, nrow=8, normalize=True))
+
+                pbar.set_postfix(
+                    {'epoch': epoch, 'metrics': metric_tracker.summary()})
+                pbar.update()
+            pbar.close()
         return metric_tracker.result()
-    
+
     def _save_checkpoint(self, epoch, save_best=False):
         """
         Saving checkpoints
@@ -185,7 +183,8 @@ class Engine:
             'monitor': self.monitor.state_dict() if self.cfg.mnt_mode != 'off' else None,
             'config': self.cfg
         }
-        filename = str(self.experiment.ckpt_dir / 'model-epoch{}.pth'.format(epoch))
+        filename = str(self.experiment.ckpt_dir /
+                       'model-epoch{}.pth'.format(epoch))
         torch.save(state, filename)
         self.logger.info("Saving checkpoint: {} ...".format(filename))
         if save_best:
@@ -206,7 +205,80 @@ class Engine:
 
         if self.cfg.mnt_mode != 'off':
             self.monitor.load_state_dict(checkpoint['monitor'])
-            
+
         self.module.load_state_dict(checkpoint['module'])
 
-        self.logger.info("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))
+        self.logger.info(
+            "Checkpoint loaded. Resume from epoch {}".format(self.start_epoch))
+
+
+def _progress(batch_idx, loader):
+    current = batch_idx * loader.batch_size
+    total = len(loader) * loader.batch_size
+    return '[{}/{} ({:.0f}%)]'.format(current, total, 100.0 * current / total)
+
+
+class MetricTracker:
+    def __init__(self):
+        self._data = {}
+        self.reset()
+
+    def reset(self):
+        self._data = {}
+
+    def update(self, key, value, n=1):
+        if key not in self._data.keys():
+            self._data[key] = {'total': 0, 'count': 0}
+        self._data[key]['total'] += value * n
+        self._data[key]['count'] += n
+
+    def avg(self, key):
+        return self._data[key]['total'] / self._data[key]['count']
+
+    def result(self):
+        return {k: self._data[k]['total'] / self._data[k]['count'] for k in self._data.keys()}
+
+    def summary(self):
+        items = ['{}: {:.8f}'.format(k, v) for k, v in self.result().items()]
+        return ' '.join(items)
+
+
+class PerformanceMonitor:
+    def __init__(self, mnt_mode, early_stop_threshold=0.1):
+        self.mnt_mode = mnt_mode
+        self.early_stop_threshold = early_stop_threshold
+
+        assert self.early_stop_threshold > 0, 'early_stop_threshold should be greater than 0'
+        assert self.mnt_mode in ['min', 'max']
+
+        self.reset()
+
+    def update(self, metric):
+        improved = (self.mnt_mode == 'min' and metric <= self.mnt_best) or \
+                   (self.mnt_mode == 'max' and metric >= self.mnt_best)
+        self.best = False
+        if improved:
+            self.mnt_best = metric
+            self.not_improved_count = 0
+            self.best = True
+        else:
+            self.not_improved_count += 1
+
+    def is_best(self):
+        return self.best == True
+
+    def should_early_stop(self):
+        return self.not_improved_count > self.early_stop_threshold
+
+    def reset(self):
+        self.not_improved_count = 0
+        self.mnt_best = inf if self.mnt_mode == 'min' else -inf
+        self.best = False
+
+    def state_dict(self):
+        return {'not_improved_count': self.not_improved_count, 'mnt_best': self.mnt_best, 'best': self.best}
+
+    def load_state_dict(self, states):
+        self.not_improved_count = states['not_improved_count']
+        self.mnt_best = states['mnt_best']
+        self.best = states['best']

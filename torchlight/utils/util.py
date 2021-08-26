@@ -9,6 +9,39 @@ from collections import OrderedDict
 from numpy import inf
 import numpy as np
 
+from functools import partial
+
+def get_obj(info, module, *args, **kwargs):
+    """
+    Finds a function handle with the name given as 'type' in info, and returns the
+    instance initialized with corresponding arguments given.
+
+    `object = get_obj('name', module, a, b=1)`
+    is equivalent to
+    `object = module.name(a, b=1)`
+    """
+    module_name = info['type']
+    module_args = dict(info['args'])
+    assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
+    module_args.update(kwargs)
+    return getattr(module, module_name)(*args, **module_args)
+
+def get_ftn(info, module, *args, **kwargs):
+    """
+    Finds a function handle with the name given as 'type' in info, and returns the
+    function with given arguments fixed with functools.partial.
+
+    `function = get_ftn('name', module, a, b=1)`
+    is equivalent to
+    `function = lambda *args, **kwargs: module.name(a, *args, b=1, **kwargs)`.
+    """
+    module_name = info['type']
+    module_args = dict(info['args'])
+    assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
+    module_args.update(kwargs)
+    return partial(getattr(module, module_name), *args, **module_args)
+
+
 def setup_mannul_seed(seed):
     torch.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
@@ -36,11 +69,6 @@ def write_json(content, fname):
     with fname.open('wt') as handle:
         json.dump(content, handle, indent=4, sort_keys=False)
 
-def inf_loop(data_loader):
-    ''' wrapper function for endless data loader. '''
-    for loader in repeat(data_loader):
-        yield from loader
-
 def prepare_device(n_gpu_use):
     """
     setup GPU device if available. get gpu device indices which are used for DataParallel
@@ -58,69 +86,3 @@ def prepare_device(n_gpu_use):
     list_ids = list(range(n_gpu_use))
     return device, list_ids
 
-
-class MetricTracker:
-    def __init__(self):
-        self._data = {}
-        self.reset()
-
-    def reset(self):
-        self._data = {}
-        
-    def update(self, key, value, n=1):
-        if key not in self._data.keys():
-            self._data[key] = {'total': 0, 'count': 0}
-        self._data[key]['total'] += value * n
-        self._data[key]['count'] += n
-
-    def avg(self, key):
-        return self._data[key]['total'] / self._data[key]['count']
-
-    def result(self):
-        return {k: self._data[k]['total'] / self._data[k]['count'] for k in self._data.keys()}
-    
-    def summary(self):
-        items = ['{}: {:.8f}'.format(k, v) for k, v in self.result().items()]
-        return ' '.join(items)
-
-        
-        
-class PerformanceMonitor:
-    def __init__(self, mnt_mode, early_stop_threshold=0.1):
-        self.mnt_mode = mnt_mode
-        self.early_stop_threshold = early_stop_threshold
-        
-        assert self.early_stop_threshold > 0, 'early_stop_threshold should be greater than 0'
-        assert self.mnt_mode in ['min', 'max']
-        
-        self.reset()
-        
-    def update(self, metric):
-        improved = (self.mnt_mode == 'min' and metric <= self.mnt_best) or \
-                   (self.mnt_mode == 'max' and metric >= self.mnt_best)
-        self.best = False
-        if improved:
-            self.mnt_best = metric
-            self.not_improved_count = 0
-            self.best = True
-        else:
-            self.not_improved_count += 1    
-                    
-    def is_best(self):
-        return self.best == True
-    
-    def should_early_stop(self):
-        return self.not_improved_count > self.early_stop_threshold
-    
-    def reset(self):
-        self.not_improved_count = 0
-        self.mnt_best = inf if self.mnt_mode == 'min' else -inf
-        self.best = False
-        
-    def state_dict(self):
-        return {'not_improved_count': self.not_improved_count, 'mnt_best': self.mnt_best, 'best': self.best}
-    
-    def load_state_dict(self, states):
-        self.not_improved_count = states['not_improved_count']
-        self.mnt_best = states['mnt_best']
-        self.best = states['best']

@@ -68,10 +68,10 @@ def accuracy(output, target):
     return correct / len(pred)
 
 class NetModule(torchlight.SimpleModule):
-    def __init__(self) -> None:
-        self.device = torch.device('cuda')
+    def __init__(self, lr, device):
+        self.device = device
         self.model = Net().to(self.device)
-        self.optimizer = optim.SGD(self.model.parameters(), lr=0.01)
+        self.optimizer = optim.SGD(self.model.parameters(), lr=lr)
         self.criterion = F.nll_loss
         self.metrics = [accuracy]
         
