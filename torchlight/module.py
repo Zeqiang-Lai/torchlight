@@ -1,11 +1,15 @@
 from abc import ABC, abstractmethod
-
+from torchlight.utils import metric
+from typing import NamedTuple
 
 class Module(ABC):
+    class StepResult(NamedTuple):
+        imgs: dict = {}
+        metrics: dict = {}
+    
     @abstractmethod
-    def step(self, data, train, epoch, step):
-        """ return a dict that contains the imgs and metrics you want to save and log
-            in the format of {'save_imgs': dict, 'metrics': dict} """
+    def step(self, data, train, epoch, step) -> StepResult:
+        """ return a StepResult that contains the imgs and metrics you want to save and log """
         raise NotImplementedError
     
     def on_epoch_end(self, train):
@@ -18,3 +22,36 @@ class Module(ABC):
     @abstractmethod
     def load_state_dict(self, state):
         raise NotImplementedError
+    
+
+class SimpleModule(Module):    
+    def step(self, data, train, epoch, step):
+        if train:
+            self.model.train()
+            self.optimizer.zero_grad()
+        
+        input, target = data
+        input, target = input.to(self.device), target.to(self.device)
+        output = self.model(input)
+        loss = self.criterion(output, target)
+        
+        if train:
+            loss.backward()
+            self.optimizer.step()    
+        
+        metrics = {'loss': loss.item()}
+        results = self.on_step_end(input, output, target)
+        metrics.update(results.metrics)
+        
+        return Module.StepResult(imgs=results.imgs, metrics=metrics)
+    
+    def on_step_end(self, input, output, target) -> Module.StepResult:
+        return Module.StepResult()
+    
+    def state_dict(self):
+        return {'model': self.model.state_dict(),
+                'optimizer': self.optimizer.state_dict()}
+    
+    def load_state_dict(self, state):
+        self.model.load_state_dict(state['model'])
+        self.optimizer.load_state_dict(state['optimizer'])

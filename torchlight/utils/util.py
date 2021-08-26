@@ -60,8 +60,7 @@ def prepare_device(n_gpu_use):
 
 
 class MetricTracker:
-    def __init__(self, writer=None):
-        self.writer = writer
+    def __init__(self):
         self._data = {}
         self.reset()
 
@@ -69,8 +68,6 @@ class MetricTracker:
         self._data = {}
         
     def update(self, key, value, n=1):
-        if self.writer is not None:
-            self.writer.add_scalar(key, value)
         if key not in self._data.keys():
             self._data[key] = {'total': 0, 'count': 0}
         self._data[key]['total'] += value * n
@@ -89,7 +86,7 @@ class MetricTracker:
         
         
 class PerformanceMonitor:
-    def __init__(self, mnt_mode, early_stop_threshold):
+    def __init__(self, mnt_mode, early_stop_threshold=0.1):
         self.mnt_mode = mnt_mode
         self.early_stop_threshold = early_stop_threshold
         

@@ -1,2 +1,4 @@
 __pycache__
 .vscode
+examples/mnist/experiments
+examples/mnist/MNIST

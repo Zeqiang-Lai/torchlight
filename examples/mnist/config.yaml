@@ -1,0 +1,3 @@
+engine:
+  max_epochs: 5
+  log_img_step: 100

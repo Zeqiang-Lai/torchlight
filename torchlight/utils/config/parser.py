@@ -106,7 +106,10 @@ class Config:
             run_id += '_' + datetime.now().strftime(r'%m%d_%H%M%S')
         self._save_dir = save_dir / exper_name / run_id  / 'models'
         self._log_dir = save_dir / exper_name / run_id  / 'log'
-
+        
+        self.config['engine']['log_dir'] = self.log_dir
+        self.config['engine']['save_dir'] = self.save_dir
+        
         # make directory for saving checkpoints and log.
         exist_ok = run_id == ''
         self.save_dir.mkdir(parents=True, exist_ok=exist_ok)
