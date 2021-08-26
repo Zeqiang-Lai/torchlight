@@ -1,10 +1,6 @@
 import torch
 from torchvision import datasets, transforms
-
-
 import torchlight
-from torchlight.config import read_yaml
-
 from net import NetModule
 
 if __name__ == '__main__':
@@ -23,9 +19,6 @@ if __name__ == '__main__':
         ])), batch_size=64, shuffle=True, num_workers=4)
 
     device = torch.device('cuda')
-    module = NetModule(cfg={'lr': 0.01}, device=device)
+    module = NetModule(lr=0.01, device=device)
     engine = torchlight.Engine(module, save_dir='experiments/simple_l1')
-    engine.config(read_yaml('config.yaml')['engine'])
-    # engine.resume('epoch3')
     engine.train(train_loader, valid_loader=test_loader)
-    engine.test(test_loader)
