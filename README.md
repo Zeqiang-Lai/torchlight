@@ -1,6 +1,6 @@
-# torchlight
+# Torchlight
 
-Torchlight is an ultra light-weight pytorch wrapper for network training.
+Torchlight is an ultra light-weight pytorch wrapper for fast prototyping of computer vision models.
 
 ## Examples
 
@@ -46,6 +46,6 @@ if __name__ == '__main__':
 
     device = torch.device('cuda')
     module = NetModule(lr=0.01, device=device)
-    engine = torchlight.Engine(module, save_dir='experiments/simple_l1')
+    engine = torchlight.Engine(module, save_dir='experiments/simple')
     engine.train(train_loader, valid_loader=test_loader)
 ```
