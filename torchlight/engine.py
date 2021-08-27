@@ -41,7 +41,7 @@ class Engine:
         self.logger = Logger(self.experiment.log_dir)
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
         self.start_epoch = 1
-
+    
     def config(self, **kwargs):
         self.cfg = EngineConfig(**kwargs)
         return self
@@ -61,7 +61,8 @@ class Engine:
 
         for epoch in range(self.start_epoch, self.cfg.max_epochs + 1):
             result = self._train_epoch(epoch, train_loader)
-
+            self.epoch = epoch
+            
             # save logged informations into log dict
             log = {'epoch': epoch}
             log.update(result)
@@ -89,12 +90,18 @@ class Engine:
                 self._save_checkpoint(epoch, save_best=is_best)
 
     def test(self, test_loader):
+        old_logger = self.logger
+        self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch)
+        self.test_log_dir.mkdir(parents=True, exist_ok=True)
+        self.logger = Logger(self.test_log_dir)
+        
         val_log = self._valid_epoch(1, test_loader)
-        log = {'val_'+k: v for k, v in val_log.items()}
-
+        log = {'test_'+k: v for k, v in val_log.items()}
         for key, value in log.items():
             self.logger.info('    {:15s}: {}'.format(str(key), value))
 
+        self.logger = old_logger
+        
     def _train_epoch(self, epoch, train_loader):
         """
         Training logic for an epoch
@@ -109,8 +116,7 @@ class Engine:
         pbar = tqdm(total=len_epoch)
         for batch_idx, data in enumerate(train_loader):
             gstep = (epoch - 1) * len_epoch + batch_idx + 1
-            results = self.module.step(
-                data, train=True, epoch=epoch, step=gstep)
+            results = self.module.step(data, train=True, epoch=epoch, step=gstep)
 
             # self.logger.tensorboard.set_step(gstep, 'train')
             for name, value in results.metrics.items():
@@ -119,14 +125,12 @@ class Engine:
 
             if gstep % self.cfg.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} {}'.format(epoch,
-                                                                 _progress(
-                                                                     batch_idx, train_loader),
+                                                                 _progress(batch_idx, train_loader),
                                                                  metric_tracker.summary()))
             if gstep % self.cfg.log_img_step == 0:
                 for name, img in results.imgs.items():
                     img_name = '{}_{}_{}.png'.format(name, epoch, gstep)
-                    self.logger.save_img(img_name, make_grid(
-                        img, nrow=8, normalize=True))
+                    self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
             pbar.set_postfix(
                 {'epoch': epoch, 'metrics': metric_tracker.summary()})
@@ -152,16 +156,14 @@ class Engine:
             len_epoch = len(valid_loader)
             for batch_idx, data in enumerate(valid_loader):
                 gstep = (epoch - 1) * len_epoch + batch_idx + 1
-                results = self.module.step(
-                    data, train=False, epoch=epoch, step=gstep)
+                results = self.module.step(data, train=False, epoch=epoch, step=gstep)
 
                 for name, value in results.metrics.items():
                     metric_tracker.update(name, value, gstep)
 
                 for name, img in results.imgs.items():
                     img_name = 'valid_{}_{}_{}.png'.format(name, epoch, gstep)
-                    self.logger.save_img(img_name, make_grid(
-                        img, nrow=8, normalize=True))
+                    self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
                 pbar.set_postfix(
                     {'epoch': epoch, 'metrics': metric_tracker.summary()})
@@ -202,7 +204,8 @@ class Engine:
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
         checkpoint = torch.load(resume_path)
         self.start_epoch = checkpoint['epoch'] + 1
-
+        self.epoch = self.start_epoch
+        
         if self.cfg.mnt_mode != 'off':
             self.monitor.load_state_dict(checkpoint['monitor'])
 
