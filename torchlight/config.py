@@ -16,7 +16,8 @@ def basic_args(description=''):
     test
         python run.py test -s [save_dir] -r best
     test with overrided config
-        python run.py test -s [save_dir] -r best -c config.yaml # test won't override the original config
+        python run.py test -s [save_dir] -r best -c config.yaml # test won't override the original config, but save the override config in test directory
+        python run.py test -s [save_dir] -r best -n new_save_dir # save in a new place
     """
 
     args = argparse.ArgumentParser(description=description)
@@ -47,8 +48,11 @@ def basic_args(description=''):
         if args.config:
             cfg.update(read_yaml(args.config))
     else:
-        assert args.config is not None, 'default config not founded, you must specify a configuration file'
-        cfg = read_yaml(args.config)
+        if args.config is None:
+            print('warning: default config not founded, forgot to specify a configuration file?')
+            cfg = {'engine': {}}
+        else:
+            cfg = read_yaml(args.config)
 
     return args, cfg
 
