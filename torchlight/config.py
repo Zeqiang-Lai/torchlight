@@ -2,7 +2,8 @@ import argparse
 from pathlib import Path
 import json
 import yaml
-
+import sys
+import os
 
 def basic_args(description=''):
     """
@@ -53,7 +54,11 @@ def basic_args(description=''):
             cfg = {'engine': {}}
         else:
             cfg = read_yaml(args.config)
-
+    
+    with open(os.path.join(args.save_dir, 'cmd.log'), 'a') as f:
+        cmd = 'python ' + ' '.join(sys.argv)
+        f.write(cmd)
+    
     return args, cfg
 
 

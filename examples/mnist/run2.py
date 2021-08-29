@@ -27,21 +27,22 @@ if __name__ == '__main__':
     module = NetModule(device=torch.device(args.device), **cfg['module'])
     
     ## ------- run with engine, almost the same for any project ---- ## 
-
+    print(args.save_dir)
     engine = torchlight.Engine(module, save_dir=args.save_dir)
     engine.config(**cfg['engine'])
     
     if args.mode == 'train':
+        cfg['engine'].update(engine.cfg._asdict())
+        write_yaml(cfg, os.path.join(args.save_dir, 'config.yaml'))
+        
         if args.resume:
             engine.resume(args.resume, base_dir=args.resume_dir)
         engine.train(train_loader, valid_loader=test_loader)
-        
-        cfg['engine'].update(engine.cfg._asdict())
-        write_yaml(cfg, os.path.join(args.save_dir, 'config.yaml'))
     else:
-        engine.resume(args.resume)
-        engine.test(test_loader)
-
         cfg['engine'].update(engine.cfg._asdict())
         write_yaml(cfg, os.path.join(engine.test_log_dir, 'config.yaml'))
     
+        engine.resume(args.resume)
+        engine.test(test_loader)
+
+        
