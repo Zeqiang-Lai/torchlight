@@ -68,6 +68,7 @@ class Logger:
         self.text.debug(msg)
     
     def save_img(self, name, img):
-        if not self.img_dir.exists():
-            self.img_dir.mkdir()
-        save_image(img, self.img_dir / name)
+        save_path:Path = self.img_dir / name
+        if not save_path.parent.exists():
+            save_path.parent.mkdir(parents=True)
+        save_image(img, save_path)

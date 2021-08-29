@@ -1,5 +1,6 @@
 from typing import NamedTuple
 from pathlib import Path
+import os
 
 import torch
 from torchvision.utils import make_grid
@@ -129,7 +130,7 @@ class Engine:
                                                                  metric_tracker.summary()))
             if gstep % self.cfg.log_img_step == 0:
                 for name, img in results.imgs.items():
-                    img_name = '{}_{}_{}.png'.format(name, epoch, gstep)
+                    img_name = os.path.join('train', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
             pbar.set_postfix(
@@ -162,7 +163,7 @@ class Engine:
                     metric_tracker.update(name, value, gstep)
 
                 for name, img in results.imgs.items():
-                    img_name = 'valid_{}_{}_{}.png'.format(name, epoch, gstep)
+                    img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
                 pbar.set_postfix(
