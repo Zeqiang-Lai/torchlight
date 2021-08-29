@@ -3,7 +3,7 @@ import logging.config
 import os
 from pathlib import Path
 import os
-import json
+import yaml
 
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import save_image
@@ -12,14 +12,14 @@ from torchvision.utils import save_image
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def setup_logging(save_dir, log_config=os.path.join(CURRENT_DIR, 'logger_config.json'), default_level=logging.INFO):
+def setup_logging(save_dir, log_config=os.path.join(CURRENT_DIR, 'logger_config.yaml'), default_level=logging.INFO):
     """
     Setup logging configuration
     """
     log_config = Path(log_config)
     if log_config.is_file():
         with log_config.open('rt') as handle:
-            config = json.load(handle)
+            config = yaml.load(handle, Loader=yaml.FullLoader)
         # modify logging paths based on run config
         for _, handler in config['handlers'].items():
             if 'filename' in handler:
@@ -51,7 +51,7 @@ class Logger:
     def __init__(self, log_dir: Path):
         self.log_dir = log_dir
         self.tensorboard_ = None
-        self.text = get_logger('Logger', log_dir)
+        self.text = get_logger('Torchlight', log_dir)
         self.img_dir = log_dir / 'img'
         
     @property
