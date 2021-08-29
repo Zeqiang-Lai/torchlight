@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+from ._util import LockedIterator
 
 class Compose:
     def __init__(self, transforms):
@@ -10,6 +11,23 @@ class Compose:
         out = data
         for transform in self.transforms:
             out = transform(out)
+        return out
+
+
+class SequentialSelect(object):
+    def __pos(self, n):
+        i = 0
+        while True:
+            # print(i)
+            yield i
+            i = (i + 1) % n
+
+    def __init__(self, transforms):
+        self.transforms = transforms
+        self.pos = LockedIterator(self.__pos(len(transforms)))
+
+    def __call__(self, img):
+        out = self.transforms[next(self.pos)](img)
         return out
 
 

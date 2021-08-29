@@ -34,9 +34,9 @@ class VGG19_torch(torch.nn.Module):
         out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
         return out
 
-class VGGLoss_torch(nn.Module):
+class VGGLoss(nn.Module):
     def __init__(self):
-        super(VGGLoss_torch, self).__init__()
+        super(VGGLoss, self).__init__()
         self.vgg = VGG19_torch().cuda()
         self.criterion = nn.L1Loss()
         self.weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
@@ -47,5 +47,3 @@ class VGGLoss_torch(nn.Module):
         for i in range(len(x_vgg)):
             loss += self.weights[i] * self.criterion(x_vgg[i], y_vgg[i].detach())
         return loss
-
-vgg_loss = VGGLoss_torch()

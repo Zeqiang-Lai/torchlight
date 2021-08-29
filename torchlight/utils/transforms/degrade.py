@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import ndimage
 import scipy
-
+import cv2
 
 def fspecial_gaussian(hsize, sigma):
     hsize = [hsize, hsize]
@@ -78,3 +78,11 @@ class GaussianDownsample:
         img = self.blur(img)
         img = self.downsampler(img)
         return img
+
+
+class Upsample:
+    def __init__(self, sf):
+        self.sf = sf
+    
+    def __call__(self, img):
+        return cv2.resize(img, (img.shape[1]*self.sf, img.shape[0]*self.sf), interpolation=cv2.INTER_CUBIC)

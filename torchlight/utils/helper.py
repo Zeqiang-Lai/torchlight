@@ -86,3 +86,11 @@ def prepare_device(n_gpu_use):
     list_ids = list(range(n_gpu_use))
     return device, list_ids
 
+def to_device(data, device):
+    if isinstance(data, torch.Tensor):
+        return data.to(device).float()
+    if isinstance(data, (list, tuple)):
+        return map(partial(to_device, device=device), data)
+    if isinstance(data, dict):
+        return {k: to_device(v, device=device) for k, v in data.items()}
+    return data

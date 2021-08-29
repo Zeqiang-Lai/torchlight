@@ -1,6 +1,7 @@
 import numpy as np
-import threading
 from skimage.util import random_noise
+
+from ._util import LockedIterator
 
 class GaussianNoise(object):
     def __init__(self, sigma):
@@ -9,21 +10,6 @@ class GaussianNoise(object):
     def __call__(self, img):
         img_L = img + np.random.normal(0, self.sigma, img.shape)
         return img_L
-
-
-class LockedIterator(object):
-    def __init__(self, it):
-        self.lock = threading.Lock()
-        self.it = it.__iter__()
-
-    def __iter__(self): return self
-
-    def __next__(self):
-        self.lock.acquire()
-        try:
-            return next(self.it)
-        finally:
-            self.lock.release()
 
 
 class GaussianNoiseBlind(object):
