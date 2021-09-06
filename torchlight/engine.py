@@ -9,7 +9,7 @@ from numpy import inf
 
 from .logging.logger import Logger
 from .module import Module
-
+from .utils.helper import timer
 
 class Experiment:
     def __init__(self, save_dir):
@@ -61,11 +61,12 @@ class Engine:
         """
 
         for epoch in range(self.start_epoch, self.cfg.max_epochs + 1):
+            timer.tic()
             result = self._train_epoch(epoch, train_loader)
             self.epoch = epoch
             
             # save logged informations into log dict
-            log = {'epoch': epoch}
+            log = {'epoch': epoch, 'time': timer.tok()}
             log.update(result)
 
             # print logged informations to the screen

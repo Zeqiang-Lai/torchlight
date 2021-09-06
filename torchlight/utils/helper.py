@@ -1,15 +1,12 @@
 import json
-from logging import log
-from os import stat
-import torch
-import pandas as pd
+import time
 from pathlib import Path
-from itertools import repeat
 from collections import OrderedDict
-from numpy import inf
+from functools import partial
+
+import torch
 import numpy as np
 
-from functools import partial
 
 def get_obj(info, module, *args, **kwargs):
     """
@@ -97,3 +94,21 @@ def to_device(data, device):
 
 def load_checkpoint(model, ckpt_path):
     model.load_state_dict(torch.load(ckpt_path)['module']['model'])
+
+class timer:
+    _start_time = 0
+    
+    @classmethod
+    def tic(cls):
+        cls._start_time = time.time()
+
+    @classmethod
+    def tok(cls):
+        now = time.time()
+        used = int(now - cls._start_time)
+        second = used % 60
+        used = used // 60
+        minutes = used % 60
+        used = used // 60
+        hours = used
+        return "{}:{}:{}".format(hours, minutes, second)
