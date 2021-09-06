@@ -94,3 +94,6 @@ def to_device(data, device):
     if isinstance(data, dict):
         return {k: to_device(v, device=device) for k, v in data.items()}
     return data
+
+def load_checkpoint(model, ckpt_path):
+    model.load_state_dict(torch.load(ckpt_path)['module']['model'])
