@@ -9,7 +9,9 @@ from numpy import inf
 
 from .logging.logger import Logger
 from .module import Module
-from .utils.helper import timer
+from .utils.helper import Timer
+
+timer = Timer()
 
 class Experiment:
     def __init__(self, save_dir):

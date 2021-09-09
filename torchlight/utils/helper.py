@@ -95,17 +95,16 @@ def to_device(data, device):
 def load_checkpoint(model, ckpt_path):
     model.load_state_dict(torch.load(ckpt_path)['module']['model'])
 
-class timer:
-    _start_time = 0
-    
-    @classmethod
-    def tic(cls):
-        cls._start_time = time.time()
-
-    @classmethod
-    def tok(cls):
+class Timer:
+    def __init__(self):
+        self._start_time = 0
+        
+    def tic(self):
+        self._start_time = time.time()
+        
+    def tok(self):
         now = time.time()
-        used = int(now - cls._start_time)
+        used = int(now - self._start_time)
         second = used % 60
         used = used // 60
         minutes = used % 60
