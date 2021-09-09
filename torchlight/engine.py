@@ -61,38 +61,41 @@ class Engine:
         """
         Full training logic
         """
-
         for epoch in range(self.start_epoch, self.cfg.max_epochs + 1):
-            timer.tic()
-            result = self._train_epoch(epoch, train_loader)
-            self.epoch = epoch
-            
-            # save logged informations into log dict
-            log = {'epoch': epoch, 'time': timer.tok()}
-            log.update(result)
+            self._train(train_loader, epoch, valid_loader)
+    
+    # TODO: use this function to support mannuly control training dataloader outside of engine
+    def _train(self, train_loader, epoch, valid_loader=None):
+        timer.tic()
+        result = self._train_epoch(epoch, train_loader)
+        self.epoch = epoch
+        
+        # save logged informations into log dict
+        log = {'epoch': epoch, 'time': timer.tok()}
+        log.update(result)
 
-            # print logged informations to the screen
-            if valid_loader is not None and epoch % self.cfg.valid_per_epoch == 0:
-                val_log = self._valid_epoch(epoch, valid_loader)
-                log.update(**{'val_'+k: v for k, v in val_log.items()})
+        # print logged informations to the screen
+        if valid_loader is not None and epoch % self.cfg.valid_per_epoch == 0:
+            val_log = self._valid_epoch(epoch, valid_loader)
+            log.update(**{'val_'+k: v for k, v in val_log.items()})
 
-            for key, value in log.items():
-                self.logger.info('    {:15s}: {}'.format(str(key), value))
+        for key, value in log.items():
+            self.logger.info('    {:15s}: {}'.format(str(key), value))
 
-            # # evaluate model performance according to configured metric, save best checkpoint as model_best
-            if self.cfg.mnt_mode != 'off':
-                assert self.cfg.mnt_metric in log.keys(), '%s not in log keys' % self.cfg.mnt_metric
-                self.monitor.update(log[self.cfg.mnt_metric])
-            #     if self.monitor.should_early_stop():
-            #         self.logger.info("Validation performance didn\'t improve for {} epochs. "
-            #                          "Training stops.".format(self.early_stop))
-            #         break
+        # # evaluate model performance according to configured metric, save best checkpoint as model_best
+        if self.cfg.mnt_mode != 'off':
+            assert self.cfg.mnt_metric in log.keys(), '%s not in log keys' % self.cfg.mnt_metric
+            self.monitor.update(log[self.cfg.mnt_metric])
+        #     if self.monitor.should_early_stop():
+        #         self.logger.info("Validation performance didn\'t improve for {} epochs. "
+        #                          "Training stops.".format(self.early_stop))
+        #         break
 
-            # save checkpoint
-            if epoch % self.cfg.save_per_epoch == 0:
-                is_best = self.monitor.is_best() if self.cfg.mnt_mode != 'off' else False
-                self._save_checkpoint(epoch, save_best=is_best)
-
+        # save checkpoint
+        if epoch % self.cfg.save_per_epoch == 0:
+            is_best = self.monitor.is_best() if self.cfg.mnt_mode != 'off' else False
+            self._save_checkpoint(epoch, save_best=is_best)
+    
     def test(self, test_loader):
         old_logger = self.logger
         self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch)
