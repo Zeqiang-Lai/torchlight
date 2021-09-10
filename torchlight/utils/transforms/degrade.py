@@ -20,18 +20,21 @@ def fspecial_gaussian(hsize, sigma):
 
 class AbstractBlur:
     def __call__(self, img):
-        """ input: [w,h,c] """
         img_L = ndimage.filters.convolve(
             img, np.expand_dims(self.kernel, axis=2), mode='wrap')
         return img_L
 
 
 class GaussianBlur(AbstractBlur):
+    """ Expect input'shape = [W,H,C]
+    """
     def __init__(self, ksize=8, sigma=3):
         self.kernel = fspecial_gaussian(ksize, sigma)
 
 
 class UniformBlur(AbstractBlur):
+    """ Expect input'shape = [W,H,C]
+    """
     def __init__(self, ksize):
         self.kernel = np.ones((ksize, ksize)) / (ksize*ksize)
 
@@ -41,6 +44,8 @@ class UniformBlur(AbstractBlur):
 class KFoldDownsample:
     ''' k-fold downsampler:
         Keeping the upper-left pixel for each distinct sfxsf patch and discarding the others
+        
+        Expect input'shape = [W,H,C]
     '''
 
     def __init__(self, sf):
@@ -52,32 +57,28 @@ class KFoldDownsample:
         return img[st::self.sf, st::self.sf, :]
 
 
-class UniformDownsample:
+class AbstractDownsample:
+    def __call__(self, img):
+        img = self.blur(img)
+        img = self.downsampler(img)
+        return img
+
+class UniformDownsample(AbstractDownsample):
+    """ Expect input'shape = [W,H,C]
+    """
     def __init__(self, sf):
         self.sf = sf
         self.blur = UniformBlur(sf)
         self.downsampler = KFoldDownsample(sf)
 
-    def __call__(self, img):
-        """ input: [w,h,c]
-        """
-        img = self.blur(img)
-        img = self.downsampler(img)
-        return img
 
-
-class GaussianDownsample:
+class GaussianDownsample(AbstractDownsample):
+    """ Expect input'shape = [W,H,C]
+    """
     def __init__(self, sf, ksize=8, sigma=3):
         self.sf = sf
         self.blur = GaussianBlur(ksize, sigma)
         self.downsampler = KFoldDownsample(sf)
-
-    def __call__(self, img):
-        """ input: [w,h,c]
-        """
-        img = self.blur(img)
-        img = self.downsampler(img)
-        return img
 
 
 class Upsample:
