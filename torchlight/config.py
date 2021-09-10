@@ -55,8 +55,8 @@ def basic_args(description=''):
         else:
             cfg = read_yaml(args.config)
     
-    os.makedirs(args.save_dir, exist_ok=True)
-    with open(os.path.join(args.save_dir, 'cmd.log'), 'a') as f:
+    os.makedirs(os.path.join(args.save_dir, 'history'), exist_ok=True)
+    with open(os.path.join(args.save_dir, 'history', 'cmd.log'), 'a') as f:
         cmd = 'python ' + ' '.join(sys.argv) + '\n'
         f.write(cmd)
     
