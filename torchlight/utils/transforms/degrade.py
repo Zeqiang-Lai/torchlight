@@ -1,7 +1,12 @@
+import os
+
 import numpy as np
 from scipy import ndimage
 import scipy
 import cv2
+from scipy.io import loadmat
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def fspecial_gaussian(hsize, sigma):
     hsize = [hsize, hsize]
@@ -87,3 +92,15 @@ class Upsample:
     
     def __call__(self, img):
         return cv2.resize(img, (img.shape[1]*self.sf, img.shape[0]*self.sf), interpolation=cv2.INTER_CUBIC)
+    
+
+class HSI2RGB(object):
+    def __init__(self, spe=None):
+        if spe is None:
+            CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+            self.SPE = loadmat(os.path.join(CURRENT_DIR, 'kernels', 'misr_spe_p.mat'))['P'] # (3,31)
+        else:
+            self.SPE = spe
+    
+    def __call__(self, img):
+        return img @ self.SPE.transpose()
