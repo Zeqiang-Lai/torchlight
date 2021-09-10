@@ -2,7 +2,6 @@
 examples/mnist/experiments
 examples/mnist/MNIST
 
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -137,6 +136,11 @@ dmypy.json
 .pyre/
 
 # pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+e analyzer
 .pytype/
 
 # Cython debug symbols
