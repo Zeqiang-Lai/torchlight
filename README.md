@@ -2,6 +2,13 @@
 
 Torchlight is an ultra light-weight pytorch wrapper for fast prototyping of computer vision models.
 
+## Installation
+
+```shell
+pip install .
+pip install -e . # editable installation
+```
+
 ## Examples
 
 1. Define a torchlight module alongside you pytorch model
