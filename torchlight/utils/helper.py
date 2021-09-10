@@ -113,11 +113,14 @@ class Timer:
         hours = used
         return "{}:{}:{}".format(hours, minutes, second)
     
-def auto_rename(path, count=1):
-    if not os.path.exists(path):
-        return path
-    file_name = os.path.basename(path)
-    name, ext = file_name.split('.')
-    new_file_name = '{}_{}.{}'.format(name, count, ext)
-    new_path = os.path.join(os.path.dirname(path), new_file_name)
-    return auto_rename(new_path)
+def auto_rename(path):
+    count = 1
+    new_path = path
+    while True:
+        if not os.path.exists(new_path):
+            return new_path
+        file_name = os.path.basename(path)
+        name, ext = file_name.split('.')
+        new_file_name = '{}_{}.{}'.format(name, count, ext)
+        new_path = os.path.join(os.path.dirname(path), new_file_name)
+        count += 1
