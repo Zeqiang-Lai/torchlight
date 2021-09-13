@@ -11,7 +11,10 @@ class Module(ABC):
     def step(self, data, train, epoch, step) -> StepResult:
         """ return a StepResult that contains the imgs and metrics you want to save and log """
         raise NotImplementedError
-
+    
+    def on_epoch_start(self, train):
+        pass
+    
     def on_epoch_end(self, train):
         pass
 

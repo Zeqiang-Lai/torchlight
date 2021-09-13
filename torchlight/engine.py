@@ -98,7 +98,7 @@ class Engine:
     
     def test(self, test_loader):
         old_logger = self.logger
-        self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch)
+        self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch-1)
         self.test_log_dir.mkdir(parents=True, exist_ok=True)
         self.logger = Logger(self.test_log_dir)
         
@@ -121,6 +121,7 @@ class Engine:
 
         len_epoch = len(train_loader)
         pbar = tqdm(total=len_epoch)
+        self.module.on_epoch_start(train=True)
         for batch_idx, data in enumerate(train_loader):
             gstep = (epoch - 1) * len_epoch + batch_idx + 1
             results = self.module.step(data, train=True, epoch=epoch, step=gstep)
@@ -159,6 +160,7 @@ class Engine:
 
         len_epoch = len(valid_loader)
         pbar = tqdm(total=len_epoch)
+        self.module.on_epoch_start(train=False)
         with torch.no_grad():
             len_epoch = len(valid_loader)
             for batch_idx, data in enumerate(valid_loader):
@@ -176,6 +178,7 @@ class Engine:
                     {'epoch': epoch, 'metrics': metric_tracker.summary()})
                 pbar.update()
             pbar.close()
+        self.module.on_epoch_end(train=False)
         return metric_tracker.result()
 
     def _save_checkpoint(self, epoch, save_best=False):
@@ -219,7 +222,7 @@ class Engine:
         self.module.load_state_dict(checkpoint['module'])
 
         self.logger.info(
-            "Checkpoint loaded. Resume from epoch {}".format(self.start_epoch))
+            "Checkpoint loaded. Resume from epoch {}".format(self.start_epoch-1))
 
 
 def _progress(batch_idx, loader):
