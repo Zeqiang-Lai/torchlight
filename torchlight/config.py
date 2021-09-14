@@ -5,6 +5,8 @@ import yaml
 import sys
 import os
 
+from munch import Munch
+
 def basic_args(description=''):
     """
     fresh new training:
@@ -60,7 +62,7 @@ def basic_args(description=''):
         cmd = 'python ' + ' '.join(sys.argv) + '\n'
         f.write(cmd)
     
-    return args, cfg
+    return args, Munch.fromDict(cfg)
 
 
 def read_json(fname):
@@ -84,4 +86,4 @@ def read_yaml(fname):
 def write_yaml(content, fname):
     fname = Path(fname)
     with fname.open('wt') as handle:
-        yaml.dump(content, handle, indent=4, sort_keys=False)
+        yaml.safe_dump(content, handle, indent=4, sort_keys=False)
