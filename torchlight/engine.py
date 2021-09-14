@@ -217,12 +217,14 @@ class Engine:
         self.epoch = self.start_epoch
         
         if self.cfg.mnt_mode != 'off':
-            self.monitor.load_state_dict(checkpoint['monitor'])
-
+            if 'monitor' in checkpoint:
+                self.monitor.load_state_dict(checkpoint['monitor'])
+            else:
+                self.logger.info("Monitor state dict not found, default value will be used.")
+                
         self.module.load_state_dict(checkpoint['module'])
 
-        self.logger.info(
-            "Checkpoint loaded. Resume from epoch {}".format(self.start_epoch-1))
+        self.logger.info("Checkpoint loaded. Resume from epoch {}".format(self.start_epoch-1))
 
 
 def _progress(batch_idx, loader):
