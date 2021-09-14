@@ -1,6 +1,7 @@
 from typing import NamedTuple
 from pathlib import Path
 import os
+import time
 
 import torch
 from torchvision.utils import make_grid
@@ -9,7 +10,23 @@ from numpy import inf
 
 from .logging.logger import Logger
 from .module import Module
-from .utils.helper import Timer
+
+class Timer:
+    def __init__(self):
+        self._start_time = 0
+        
+    def tic(self):
+        self._start_time = time.time()
+        
+    def tok(self):
+        now = time.time()
+        used = int(now - self._start_time)
+        second = used % 60
+        used = used // 60
+        minutes = used % 60
+        used = used // 60
+        hours = used
+        return "{}:{}:{}".format(hours, minutes, second)
 
 timer = Timer()
 
@@ -297,3 +314,4 @@ class PerformanceMonitor:
         self.not_improved_count = states['not_improved_count']
         self.mnt_best = states['mnt_best']
         self.best = states['best']
+
