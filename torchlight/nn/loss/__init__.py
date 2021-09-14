@@ -1,2 +1,2 @@
 from .vggloss import VGGLoss
-from .misc import SAMLoss
+from .misc import SAMLoss, FocalFrequencyLoss
