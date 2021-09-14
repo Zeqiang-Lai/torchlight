@@ -113,9 +113,11 @@ class Engine:
             is_best = self.monitor.is_best() if self.cfg.mnt_mode != 'off' else False
             self._save_checkpoint(epoch, save_best=is_best)
     
-    def test(self, test_loader):
+    def test(self, test_loader, name=None):
         old_logger = self.logger
         self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch-1)
+        if name is not None:
+           self.test_log_dir = self.test_log_dir / name
         self.test_log_dir.mkdir(parents=True, exist_ok=True)
         self.logger = Logger(self.test_log_dir)
         

@@ -1,6 +1,8 @@
 .vscode
 examples/mnist/experiments
 examples/mnist/MNIST
+examples/mnist/raw
+examples/mnist/processed
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
