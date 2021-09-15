@@ -55,7 +55,8 @@ class EngineConfig(NamedTuple):
     mnt_metric: str = 'loss'
 
     pbar: str = 'tqdm'
-
+    num_fmt: str = '{:8.5g}'
+    
 class Engine:
     def __init__(self, module: Module, save_dir):
         self.module = module
@@ -168,7 +169,7 @@ class Engine:
                     img_name = os.path.join('train', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
-            pbar.set_postfix(format_nums(metric_tracker.result()))
+            pbar.set_postfix(self.format_nums(metric_tracker.result()))
             pbar.update()
 
         pbar.close()
@@ -202,7 +203,7 @@ class Engine:
                     img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
                     
-                pbar.set_postfix(format_nums(metric_tracker.result()))
+                pbar.set_postfix(self.format_nums(metric_tracker.result()))
                 pbar.update()
             pbar.close()
         self.module.on_epoch_end(train=False)
@@ -265,19 +266,21 @@ class Engine:
     def _show_divider(self, sym, text='', ncols=None):
         print(text_divider(sym, text, ncols))
     
+    def format_nums(self, d):
+        return {k: format_num(v, fmt=self.cfg.num_fmt) for k, v in d.items()}
+
+    
 def _progress(batch_idx, loader):
     current = batch_idx * loader.batch_size
     total = len(loader) * loader.batch_size
     return '[{}/{} ({:.0f}%)]'.format(current, total, 100.0 * current / total)
 
 
-def format_num(n):
-    f = '{0:.3g}'.format(n).replace('+0', '+').replace('-0', '-')
+def format_num(n, fmt='{0:.3g}'):
+    f = fmt.format(n).replace('+0', '+').replace('-0', '-')
     n = str(n)
     return f if len(f) < len(n) else n
 
-def format_nums(d):
-    return {k: format_num(v) for k, v in d.items()}
 
 def text_divider(sym, text='', ncols=None):
     if ncols is None:
