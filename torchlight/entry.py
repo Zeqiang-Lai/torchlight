@@ -31,7 +31,7 @@ def run(args, cfg,
         if args.resume:
             engine.resume(args.resume, base_dir=args.resume_dir)
         engine.train(train_loader, valid_loader=valid_loader)
-    else:
+    elif args.mode == 'test':
         assert test_loader is not None, 'test loader is not provided'
         engine.resume(args.resume)
         
@@ -44,3 +44,6 @@ def run(args, cfg,
 
         cfg['engine'].update(engine.cfg._asdict())
         write_yaml(cfg, os.path.join(args.save_dir, 'config.yaml'))
+    else:
+        engine.set_debug_mode()
+        engine.train(train_loader, valid_loader=valid_loader)

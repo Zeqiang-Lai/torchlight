@@ -65,11 +65,15 @@ class Engine:
         self.logger = Logger(self.experiment.log_dir)
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
         self.start_epoch = 1
+        self.debug_mode = False
     
     def config(self, **kwargs):
         self.cfg = EngineConfig(**kwargs)
         return self
-
+    
+    def set_debug_mode(self):
+        self.debug_mode = True
+    
     def resume(self, model_name, base_dir=None):
         ckpt_dir = self.experiment.ckpt_dir if base_dir is None else Experiment(base_dir).ckpt_dir
         resume_path = ckpt_dir / 'model-{}.pth'.format(model_name)
@@ -96,12 +100,14 @@ class Engine:
         log.update(result)
 
         # print logged informations to the screen
-        if valid_loader is not None and epoch % self.cfg.valid_per_epoch == 0:
+        if valid_loader is not None and (epoch % self.cfg.valid_per_epoch == 0 or self.debug_mode):
             val_log = self._valid_epoch(epoch, valid_loader)
             log.update(**{'val_'+k: v for k, v in val_log.items()})
-            
+        
+        if self.debug_mode: return
+        
         self._log_log(log)
-         
+        
         # # evaluate model performance according to configured metric, save best checkpoint as model_best
         if self.cfg.mnt_mode != 'off':
             assert self.cfg.mnt_metric in log.keys(), '%s not in log keys' % self.cfg.mnt_metric
@@ -172,6 +178,9 @@ class Engine:
             pbar.set_postfix(self.format_nums(metric_tracker.result()))
             pbar.update()
 
+            if self.debug_mode: 
+                break
+            
         pbar.close()
         self.module.on_epoch_end(train=True)
 
@@ -205,6 +214,9 @@ class Engine:
                     
                 pbar.set_postfix(self.format_nums(metric_tracker.result()))
                 pbar.update()
+                
+                if self.debug_mode: 
+                    break
             pbar.close()
         self.module.on_epoch_end(train=False)
         return metric_tracker.result()

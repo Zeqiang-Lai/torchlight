@@ -25,7 +25,7 @@ def basic_args(description=''):
 
     args = argparse.ArgumentParser(description=description)
     args.add_argument('mode', type=str, help='running mode',
-                      choices=['train', 'test'])
+                      choices=['train', 'test', 'debug'])
     args.add_argument('-c', '--config', default=None, type=str,
                       help='config file path (default: None)')
     args.add_argument('-r', '--resume', default=None, type=str,
