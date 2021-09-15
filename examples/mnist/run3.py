@@ -23,4 +23,4 @@ if __name__ == '__main__':
 
     module = NetModule(device=torch.device(args.device), **cfg['module'])
     
-    run(args, cfg, module, train_loader=train_loader, test_loader=test_loader)
+    run(args, cfg, module, train_loader=train_loader, valid_loader=test_loader, test_loader=test_loader)
