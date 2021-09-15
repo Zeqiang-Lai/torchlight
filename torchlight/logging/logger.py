@@ -67,6 +67,9 @@ class Logger:
     def debug(self, msg):
         self.text.debug(msg)
     
+    def warning(self, msg):
+        self.text.warning(msg)
+    
     def save_img(self, name, img):
         save_path:Path = self.img_dir / name
         if not save_path.parent.exists():
