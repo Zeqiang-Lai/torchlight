@@ -92,8 +92,11 @@ class Engine:
             try:
                 self._train(train_loader, epoch, valid_loader)
             except KeyboardInterrupt:
-                print("Oops! Training was terminated by Ctrl-C.")
-                self._save_checkpoint(epoch)
+                print("Oops! Training was terminated by Ctrl-C. \n"
+                      "Do you want to save the latest checkpoint? Press y/n")
+                res = readchar.readchar()
+                if res == 'y':
+                    self._save_checkpoint(epoch)
                 return
                      
     # TODO: use this function to support mannuly control training dataloader outside of engine
