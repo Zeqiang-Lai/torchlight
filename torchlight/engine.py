@@ -3,6 +3,8 @@ from pathlib import Path
 import os
 import time
 import shutil
+import signal
+import readchar
 
 import torch
 from torchvision.utils import make_grid
@@ -66,7 +68,7 @@ class Engine:
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
         self.start_epoch = 1
         self.debug_mode = False
-    
+        
     def config(self, **kwargs):
         self.cfg = EngineConfig(**kwargs)
         return self
@@ -87,8 +89,13 @@ class Engine:
         """
         for epoch in range(self.start_epoch, self.cfg.max_epochs + 1):
             self._show_divider('=', text='Epoch[{}]'.format(epoch))
-            self._train(train_loader, epoch, valid_loader)
-            
+            try:
+                self._train(train_loader, epoch, valid_loader)
+            except KeyboardInterrupt:
+                print("Oops! Training was terminated by Ctrl-C.")
+                self._save_checkpoint(epoch)
+                return
+                     
     # TODO: use this function to support mannuly control training dataloader outside of engine
     def _train(self, train_loader, epoch, valid_loader=None):
         timer.tic()
