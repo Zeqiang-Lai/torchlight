@@ -67,15 +67,23 @@ def accuracy(output, target):
     correct = pred.eq(target.view_as(pred)).sum().item()
     return correct / len(pred)
 
-class NetModule(torchlight.SimpleModule):
+class NetModule(torchlight.SMSOModule):
     def __init__(self, lr, device):
+        model = Net()
+        optimizer = optim.SGD(model.parameters(), lr=lr)
+        super().__init__(model, optimizer)
         self.device = device
-        self.model = Net().to(self.device)
-        self.optimizer = optim.SGD(self.model.parameters(), lr=lr)
+        self.model.to(device)
         self.criterion = F.nll_loss
         self.metrics = [accuracy]
+    
+    def _step(self, data, train, epoch, step):
+        input, target = data
+        input, target = input.to(self.device), target.to(self.device)
+        output = self.model(input)
+        loss = self.criterion(output, target)
         
-    def on_step_end(self, input, output, target) -> Module.StepResult:
-        metrics = {'accuracy': accuracy(output, target)}
+        metrics = {'loss': loss.item(), 'accuracy': accuracy(output, target)}
         imgs = {'input': input}
-        return Module.StepResult(metrics=metrics, imgs=imgs)
+
+        return loss, Module.StepResult(metrics=metrics, imgs=imgs)
