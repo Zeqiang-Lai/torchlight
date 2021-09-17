@@ -38,6 +38,12 @@ class SAMLoss(torch.nn.Module):
         return out / x1.shape[0]
 
 
+def charbonnier_loss(pred, gt, eps=1e-3):
+    N = pred.shape[0]
+    diff = torch.sum(torch.sqrt((pred - gt).pow(2) + eps**2)) / N
+    return diff
+
+
 class CharbonnierLoss(nn.Module):
     def __init__(self, eps=1e-3):
         super(CharbonnierLoss, self).__init__()
