@@ -1,25 +1,3 @@
-# Torchlight
-
-Torchlight is an ultra light-weight pytorch wrapper for fast prototyping of computer vision models.
-
-## Installation
-
-```shell
-pip install .
-pip install -e . # editable installation
-```
-
-## Features
-
-- Debug Mode 
-- User friendly progress bar 
-- Save latest checkpoint if interrupted by Ctrl-C
-
-## A Minimal Example
-
-You can also find the following example at [example/mnist/minimal.py](examples/mnist/minimal.py)
-
-```python
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -86,4 +64,3 @@ if __name__ == '__main__':
     module = Moudle(lr=0.01, device=device)
     engine = torchlight.Engine(module, save_dir='experiments/simple_l1')
     engine.train(train_loader, valid_loader=test_loader)
-```
