@@ -2,6 +2,8 @@
 
 Torchlight is an ultra light-weight pytorch wrapper for fast prototyping of computer vision models.
 
+[![asciicast](https://asciinema.org/a/plgeWrgKAl9HdbI6kQEYMRsii.svg)](https://asciinema.org/a/plgeWrgKAl9HdbI6kQEYMRsii)
+
 ## Installation
 
 ```shell
