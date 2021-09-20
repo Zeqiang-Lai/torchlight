@@ -3,6 +3,7 @@ from skimage.util import random_noise
 
 from ._util import LockedIterator
 
+
 class GaussianNoise(object):
     def __init__(self, sigma):
         self.sigma = sigma

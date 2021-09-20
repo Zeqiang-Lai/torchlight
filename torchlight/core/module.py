@@ -29,6 +29,7 @@ class Module(ABC):
 
 class SMSOModule(Module):
     """ Single Model Single Optimizer Module"""
+
     def __init__(self, model, optimizer):
         super().__init__()
         self.model = model
@@ -67,13 +68,12 @@ class SimpleModule(SMSOModule):
         super().__init__(model, optimizer)
         self.device = device
         self.model = self.model.to(device)
-        
+
     def _step(self, data, train, epoch, step):
         input, target = data
         input, target = input.to(self.device), target.to(self.device)
         output = self.model(input)
         loss = self.criterion(output, target)
-        
+
         metrics = {'loss': loss.item()}
         return loss, self.StepResult(metrics=metrics)
-

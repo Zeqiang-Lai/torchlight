@@ -2,6 +2,7 @@ from torchvision import models
 import torch
 import torch.nn as nn
 
+
 class VGG19_torch(torch.nn.Module):
     def __init__(self, requires_grad=False):
         super(VGG19_torch, self).__init__()
@@ -33,6 +34,7 @@ class VGG19_torch(torch.nn.Module):
         h_relu5 = self.slice5(h_relu4)
         out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
         return out
+
 
 class VGGLoss(nn.Module):
     def __init__(self):

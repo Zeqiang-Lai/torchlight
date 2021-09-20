@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.init as init
 
-from .sync_batchnorm import SynchronizedBatchNorm2d, SynchronizedBatchNorm3d
+from .ops.sync_batchnorm import SynchronizedBatchNorm2d, SynchronizedBatchNorm3d
 
 def init_params(net, init_type='kn'):
     for m in net.modules():

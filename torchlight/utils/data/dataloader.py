@@ -4,11 +4,15 @@ from torch.utils.data.dataloader import default_collate
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision import datasets, transforms
 
+
 class BaseDataLoader(DataLoader):
     """
     Base class for all data loaders
     """
-    def __init__(self, dataset, batch_size, shuffle=True, validation_split=0, num_workers=4, collate_fn=default_collate, **kwargs):
+
+    def __init__(
+            self, dataset, batch_size, shuffle=True, validation_split=0, num_workers=4, collate_fn=default_collate, **
+            kwargs):
         self.validation_split = validation_split
         self.shuffle = shuffle
 

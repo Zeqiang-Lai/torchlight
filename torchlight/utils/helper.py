@@ -24,6 +24,7 @@ def get_obj(info, module, *args, **kwargs):
     module_args.update(kwargs)
     return getattr(module, module_name)(*args, **module_args)
 
+
 def get_ftn(info, module, *args, **kwargs):
     """
     Finds a function handle with the name given as 'type' in info, and returns the
@@ -46,26 +47,31 @@ def setup_mannul_seed(seed):
     torch.backends.cudnn.benchmark = False
     np.random.seed(seed)
 
-def adjust_learning_rate(optimizer, lr):    
-    print('Adjust Learning Rate => %.4e' %lr)
+
+def adjust_learning_rate(optimizer, lr):
+    print('Adjust Learning Rate => %.4e' % lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
         # param_group['initial_lr'] = lr
+
 
 def ensure_dir(dirname):
     dirname = Path(dirname)
     if not dirname.is_dir():
         dirname.mkdir(parents=True, exist_ok=False)
 
+
 def read_json(fname):
     fname = Path(fname)
     with fname.open('rt') as handle:
         return json.load(handle, object_hook=OrderedDict)
 
+
 def write_json(content, fname):
     fname = Path(fname)
     with fname.open('wt') as handle:
         json.dump(content, handle, indent=4, sort_keys=False)
+
 
 def prepare_device(n_gpu_use):
     """
@@ -84,6 +90,7 @@ def prepare_device(n_gpu_use):
     list_ids = list(range(n_gpu_use))
     return device, list_ids
 
+
 def to_device(data, device):
     if isinstance(data, torch.Tensor):
         return data.to(device).float()
@@ -93,9 +100,11 @@ def to_device(data, device):
         return {k: to_device(v, device=device) for k, v in data.items()}
     return data
 
+
 def load_checkpoint(model, ckpt_path):
     model.load_state_dict(torch.load(ckpt_path)['module']['model'])
-    
+
+
 def auto_rename(path):
     count = 1
     new_path = path

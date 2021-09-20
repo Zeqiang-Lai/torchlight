@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 import yaml
 
-from torch.utils.tensorboard import SummaryWriter
+
 from torchvision.utils import save_image
 
 
@@ -37,6 +37,7 @@ log_levels = {
     2: logging.DEBUG
 }
 
+
 def get_logger(name, save_dir, verbosity=2):
     setup_logging(save_dir)
     msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(
@@ -53,25 +54,26 @@ class Logger:
         self.tensorboard_ = None
         self.text = get_logger('Torchlight', log_dir)
         self.img_dir = log_dir / 'img'
-        
+
     @property
     def tensorboard(self):
         if self.tensorboard_ is None:
+            from torch.utils.tensorboard import SummaryWriter
             tensorboard_dir = os.path.join(self.log_dir, 'tensorboard')
             self.tensorboard_ = SummaryWriter(log_dir=tensorboard_dir)
         return self.tensorboard_
-    
+
     def info(self, msg):
         self.text.info(msg)
-    
+
     def debug(self, msg):
         self.text.debug(msg)
-    
+
     def warning(self, msg):
         self.text.warning(msg)
-    
+
     def save_img(self, name, img):
-        save_path:Path = self.img_dir / name
+        save_path: Path = self.img_dir / name
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
         save_image(img, save_path)

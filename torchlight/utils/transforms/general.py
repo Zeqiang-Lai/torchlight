@@ -3,6 +3,7 @@ import random
 
 from ._util import LockedIterator
 
+
 class Compose:
     def __init__(self, transforms):
         self.transforms = transforms

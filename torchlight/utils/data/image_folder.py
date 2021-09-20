@@ -24,6 +24,7 @@ def make_dataset(dir):
 
     return images
 
+
 def filter(imgs, loader, min_size=None):
     if min_size is None:
         return imgs
@@ -35,11 +36,14 @@ def filter(imgs, loader, min_size=None):
         filtered_imgs.append(img)
     return filtered_imgs
 
+
 def default_loader(path):
     return Image.open(path).convert('RGB')
 
+
 def gray_loader(path):
     return Image.open(path).convert('L')
+
 
 class ImageFolder(data.Dataset):
     def __init__(self, root, transform=None, return_paths=False,
@@ -69,20 +73,21 @@ class ImageFolder(data.Dataset):
     def __len__(self):
         return len(self.imgs)
 
-    
-    
+
 class ImageFolderDataset(ImageFolder):
-    def __init__(self, root, common_transform=None, input_transform=None, target_transform=None, loader=default_loader, min_size=None):
+    def __init__(
+            self, root, common_transform=None, input_transform=None, target_transform=None, loader=default_loader,
+            min_size=None):
         super().__init__(root, loader=loader, min_size=min_size)
         self.common_transform = common_transform
         self.input_transform = input_transform
         self.target_transform = target_transform
-        
+
     def __getitem__(self, index):
         img = super().__getitem__(index)
         input = output = self.common_transform(img)
         if self.input_transform is not None:
             input = self.input_transform(input)
         if self.target_transform is not None:
-            output = self.target_transform(output)  
+            output = self.target_transform(output)
         return input, output

@@ -9,6 +9,7 @@ from munch import Munch
 from colorama import init, Fore
 init(autoreset=True)
 
+
 def basic_args(description=''):
     """
     fresh new training:
@@ -58,12 +59,12 @@ def basic_args(description=''):
             cfg = {'engine': {}}
         else:
             cfg = read_yaml(args.config)
-    
+
     os.makedirs(os.path.join(args.save_dir, 'history'), exist_ok=True)
     with open(os.path.join(args.save_dir, 'history', 'cmd.log'), 'a') as f:
         cmd = 'python ' + ' '.join(sys.argv) + '\n'
         f.write(cmd)
-    
+
     return args, Munch.fromDict(cfg)
 
 

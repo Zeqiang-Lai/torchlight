@@ -8,6 +8,7 @@ from scipy.io import loadmat
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 def fspecial_gaussian(hsize, sigma):
     hsize = [hsize, hsize]
     siz = [(hsize[0]-1.0)/2.0, (hsize[1]-1.0)/2.0]
@@ -33,6 +34,7 @@ class AbstractBlur:
 class GaussianBlur(AbstractBlur):
     """ Expect input'shape = [W,H,C]
     """
+
     def __init__(self, ksize=8, sigma=3):
         self.kernel = fspecial_gaussian(ksize, sigma)
 
@@ -40,6 +42,7 @@ class GaussianBlur(AbstractBlur):
 class UniformBlur(AbstractBlur):
     """ Expect input'shape = [W,H,C]
     """
+
     def __init__(self, ksize):
         self.kernel = np.ones((ksize, ksize)) / (ksize*ksize)
 
@@ -49,7 +52,7 @@ class UniformBlur(AbstractBlur):
 class KFoldDownsample:
     ''' k-fold downsampler:
         Keeping the upper-left pixel for each distinct sfxsf patch and discarding the others
-        
+
         Expect input'shape = [W,H,C]
     '''
 
@@ -68,9 +71,11 @@ class AbstractDownsample:
         img = self.downsampler(img)
         return img
 
+
 class UniformDownsample(AbstractDownsample):
     """ Expect input'shape = [W,H,C]
     """
+
     def __init__(self, sf):
         self.sf = sf
         self.blur = UniformBlur(sf)
@@ -80,6 +85,7 @@ class UniformDownsample(AbstractDownsample):
 class GaussianDownsample(AbstractDownsample):
     """ Expect input'shape = [W,H,C]
     """
+
     def __init__(self, sf, ksize=8, sigma=3):
         self.sf = sf
         self.blur = GaussianBlur(ksize, sigma)
@@ -89,18 +95,18 @@ class GaussianDownsample(AbstractDownsample):
 class Upsample:
     def __init__(self, sf):
         self.sf = sf
-    
+
     def __call__(self, img):
         return cv2.resize(img, (img.shape[1]*self.sf, img.shape[0]*self.sf), interpolation=cv2.INTER_CUBIC)
-    
+
 
 class HSI2RGB(object):
     def __init__(self, spe=None):
         if spe is None:
             CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-            self.SPE = loadmat(os.path.join(CURRENT_DIR, 'kernels', 'misr_spe_p.mat'))['P'] # (3,31)
+            self.SPE = loadmat(os.path.join(CURRENT_DIR, 'kernels', 'misr_spe_p.mat'))['P']  # (3,31)
         else:
             self.SPE = spe
-    
+
     def __call__(self, img):
         return img @ self.SPE.transpose()

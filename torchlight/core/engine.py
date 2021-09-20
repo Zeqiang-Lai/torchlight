@@ -17,13 +17,14 @@ from .module import Module
 
 init(autoreset=True)
 
+
 class Timer:
     def __init__(self):
         self._start_time = 0
-        
+
     def tic(self):
         self._start_time = time.time()
-        
+
     def tok(self):
         now = time.time()
         used = int(now - self._start_time)
@@ -34,7 +35,9 @@ class Timer:
         hours = used
         return "{}:{}:{}".format(hours, minutes, second)
 
+
 timer = Timer()
+
 
 class Experiment:
     def __init__(self, save_dir):
@@ -60,7 +63,8 @@ class EngineConfig(NamedTuple):
 
     pbar: str = 'tqdm'
     num_fmt: str = '{:8.5g}'
-    
+
+
 class Engine:
     def __init__(self, module: Module, save_dir):
         self.module = module
@@ -70,14 +74,14 @@ class Engine:
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
         self.start_epoch = 1
         self.debug_mode = False
-        
+
     def config(self, **kwargs):
         self.cfg = EngineConfig(**kwargs)
         return self
-    
+
     def set_debug_mode(self):
         self.debug_mode = True
-    
+
     def resume(self, model_name, base_dir=None):
         ckpt_dir = self.experiment.ckpt_dir if base_dir is None else Experiment(base_dir).ckpt_dir
         resume_path = ckpt_dir / 'model-{}.pth'.format(model_name)
@@ -100,13 +104,13 @@ class Engine:
                 if res == 'y':
                     self._save_checkpoint(epoch)
                 return
-                     
+
     # TODO: use this function to support mannuly control training dataloader outside of engine
     def _train(self, train_loader, epoch, valid_loader=None):
         timer.tic()
         result = self._train_epoch(epoch, train_loader)
         self.epoch = epoch
-        
+
         # save logged informations into log dict
         log = {'epoch': epoch, 'time': timer.tok()}
         log.update(result)
@@ -115,11 +119,12 @@ class Engine:
         if valid_loader is not None and (epoch % self.cfg.valid_per_epoch == 0 or self.debug_mode):
             val_log = self._valid_epoch(epoch, valid_loader)
             log.update(**{'val_'+k: v for k, v in val_log.items()})
-        
-        if self.debug_mode: return
-        
+
+        if self.debug_mode:
+            return
+
         self._log_log(log)
-        
+
         # # evaluate model performance according to configured metric, save best checkpoint as model_best
         if self.cfg.mnt_mode != 'off':
             assert self.cfg.mnt_metric in log.keys(), '%s not in log keys' % self.cfg.mnt_metric
@@ -133,28 +138,28 @@ class Engine:
         if epoch % self.cfg.save_per_epoch == 0:
             is_best = self.monitor.is_best() if self.cfg.mnt_mode != 'off' else False
             self._save_checkpoint(epoch, save_best=is_best)
-    
+
     def test(self, test_loader, name=None):
         old_logger = self.logger
         self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch-1)
         if name is not None:
-           self.test_log_dir = self.test_log_dir / name
+            self.test_log_dir = self.test_log_dir / name
         self.test_log_dir.mkdir(parents=True, exist_ok=True)
         self.logger = Logger(self.test_log_dir)
-        
+
         val_log = self._valid_epoch(1, test_loader)
         log = {'test_'+k: v for k, v in val_log.items()}
-        
+
         self._log_log(log)
 
         self.logger = old_logger
-    
+
     def _log_log(self, log):
         self._show_divider('-')
         for key, value in log.items():
             self.logger.info('    {:15s}: {}'.format(str(key), value))
         self._show_divider('-')
-    
+
     def _train_epoch(self, epoch, train_loader):
         """
         Training logic for an epoch
@@ -190,9 +195,9 @@ class Engine:
             pbar.set_postfix(self.format_nums(metric_tracker.result()))
             pbar.update()
 
-            if self.debug_mode: 
+            if self.debug_mode:
                 break
-            
+
         pbar.close()
         self.module.on_epoch_end(train=True)
 
@@ -223,11 +228,11 @@ class Engine:
                 for name, img in results.imgs.items():
                     img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
-                    
+
                 pbar.set_postfix(self.format_nums(metric_tracker.result()))
                 pbar.update()
-                
-                if self.debug_mode: 
+
+                if self.debug_mode:
                     break
             pbar.close()
         self.module.on_epoch_end(train=False)
@@ -266,18 +271,17 @@ class Engine:
         checkpoint = torch.load(resume_path)
         self.start_epoch = checkpoint['epoch'] + 1
         self.epoch = self.start_epoch
-        
+
         if self.cfg.mnt_mode != 'off':
             if 'monitor' in checkpoint:
                 self.monitor.load_state_dict(checkpoint['monitor'])
             else:
                 self.logger.info("Monitor state dict not found, default value will be used.")
-                
+
         self.module.load_state_dict(checkpoint['module'])
 
         self.logger.info("Checkpoint loaded. Resume from epoch {}".format(self.start_epoch-1))
 
-    
     def _progress_bar(self, total):
         if self.cfg.pbar == 'qqdm':
             bar = qqdm
@@ -286,14 +290,14 @@ class Engine:
         else:
             raise ValueError('choice of progressbar [qqdm, tqdm]')
         return bar(total=total, dynamic_ncols=True)
-    
+
     def _show_divider(self, sym, text='', ncols=None):
         print(text_divider(sym, text, ncols))
-    
+
     def format_nums(self, d):
         return {k: format_num(v, fmt=self.cfg.num_fmt) for k, v in d.items()}
 
-    
+
 def _progress(batch_idx, loader):
     current = batch_idx * loader.batch_size
     total = len(loader) * loader.batch_size
@@ -313,6 +317,7 @@ def text_divider(sym, text='', ncols=None):
     right = ncols - left
     divider = sym*(left-len(text)) + text + sym*right
     return divider
+
 
 class MetricTracker:
     def __init__(self):
@@ -337,7 +342,7 @@ class MetricTracker:
     def summary(self):
         items = ['{}: {:.8f}'.format(k, v) for k, v in self.result().items()]
         return ' '.join(items)
-    
+
 
 class PerformanceMonitor:
     def __init__(self, mnt_mode, early_stop_threshold=0.1):
@@ -378,4 +383,3 @@ class PerformanceMonitor:
         self.not_improved_count = states['not_improved_count']
         self.mnt_best = states['mnt_best']
         self.best = states['best']
-
