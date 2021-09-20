@@ -3,9 +3,9 @@ from typing import Union
 
 from torch.utils.data import DataLoader
 
-from .module import Module
-from .engine import Engine
-from .config import write_yaml
+from .core.module import Module
+from .core.engine import Engine
+from .core.config import write_yaml
 from .utils.helper import auto_rename
 
 def run(args, cfg, 

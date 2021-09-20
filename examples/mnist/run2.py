@@ -2,9 +2,9 @@ import torch
 from torchvision import datasets, transforms
 import os
 import torchlight
-from torchlight.config import basic_args, write_yaml
+from torchlight.core.config import basic_args, write_yaml
 
-from net import NetModule
+from module import NetModule
 
 if __name__ == '__main__':
     args, cfg = basic_args('MNIST Classification')

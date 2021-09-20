@@ -1,12 +1,12 @@
 import torch
 from torchvision import datasets, transforms
-from torchlight.config import basic_args
+from torchlight import config
 from torchlight.entry import run
 
-from net import NetModule
+from module import NetModule
 
 if __name__ == '__main__':
-    args, cfg = basic_args('MNIST')
+    args, cfg = config.basic_args('MNIST')
     
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(root='MNIST', train=True, download=True,
