@@ -3,17 +3,19 @@ from pathlib import Path
 import os
 import time
 import shutil
-import signal
-import readchar
 
 import torch
 from torchvision.utils import make_grid
 from tqdm import tqdm
 from qqdm import qqdm
 from numpy import inf
+from colorama import Fore, init
+import readchar
 
 from .logging.logger import Logger
 from .module import Module
+
+init(autoreset=True)
 
 class Timer:
     def __init__(self):
@@ -92,8 +94,8 @@ class Engine:
             try:
                 self._train(train_loader, epoch, valid_loader)
             except KeyboardInterrupt:
-                print("Oops! Training was terminated by Ctrl-C. \n"
-                      "Do you want to save the latest checkpoint? Press y/n")
+                print(Fore.RED + "Oops!" + Fore.RESET + " Training was terminated by Ctrl-C. "
+                      "Do you want to save the latest checkpoint?" " Press y/n")
                 res = readchar.readchar()
                 if res == 'y':
                     self._save_checkpoint(epoch)

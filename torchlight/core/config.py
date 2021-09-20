@@ -6,6 +6,8 @@ import sys
 import os
 
 from munch import Munch
+from colorama import init, Fore
+init(autoreset=True)
 
 def basic_args(description=''):
     """
@@ -52,7 +54,7 @@ def basic_args(description=''):
             cfg.update(read_yaml(args.config))
     else:
         if args.config is None:
-            print('warning: default config not founded, forgot to specify a configuration file?')
+            print(Fore.RED + 'Warning: default config not founded, forgot to specify a configuration file?')
             cfg = {'engine': {}}
         else:
             cfg = read_yaml(args.config)
