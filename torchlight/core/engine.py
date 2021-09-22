@@ -171,7 +171,7 @@ class Engine:
                     img_name = os.path.join('train', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
-            pbar.set_postfix(self.format_nums(metric_tracker.result()))
+            pbar.set_postfix(self._format_nums(metric_tracker.result()))
             pbar.update()
 
             if self.debug_mode:
@@ -208,7 +208,7 @@ class Engine:
                     img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
-                pbar.set_postfix(self.format_nums(metric_tracker.result()))
+                pbar.set_postfix(self._format_nums(metric_tracker.result()))
                 pbar.update()
 
                 if self.debug_mode:
@@ -273,7 +273,7 @@ class Engine:
     def _show_divider(self, sym, text='', ncols=None):
         print(text_divider(sym, text, ncols))
 
-    def format_nums(self, d):
+    def _format_nums(self, d):
         return {k: format_num(v, fmt=self.cfg.num_fmt) for k, v in d.items()}
 
 
