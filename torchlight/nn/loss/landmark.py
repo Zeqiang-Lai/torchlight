@@ -1,49 +1,47 @@
-from math import floor
 import torch.nn as nn
+import torch
+import torch.nn.functional as F
 
 # Unofficial Implementation of Landmark Loss in
 # CrossNet++: Cross-scale Large-parallax Warping for Reference-based Super-resolution
+    
 
-
-def landmark_loss(landmarks, flow):
-    """ 
-        landmarks: cords of each paired landmarks [B,n,4]
+def landmark_loss(source_lm, target_lm, flow):
+    """ source_lm, target_lm: [B,N,2]
         flow: offset of the flow [B,2,W,H]
     """
     # since landmark cord can be fractional, we need interpolation to
     # get the flow offset of each landmark.
-    loss = 0
-    B, _, W, H = flow.shape
-    for i in range(B):
-        for lm in landmarks[i]:
-            x1, y1, x2, y2 = lm
-            x1_d = floor(x1)
-            y1_d = floor(y1)
-            x1_u = x1_d+1
-            y1_u = y1_d+1
-            if x1_u >= W or y1_u >= H:
-                continue
-            a = flow[i, :, x1_d, y1_d]
-            b = flow[i, :, x1_u, y1_u]
-            c = flow[i, :, x1_u, y1_d]
-            d = flow[i, :, x1_d, y1_u]
-            o = a*(x1-x1_d)*(y1-y1_d) + b*(x1_u-x1)*(y1_u-x1) + c*(x1_u-x1)*(y1-y1_d) + d*(x1-x1_d)*(y1_u-x1)
-            o_x, o_y = o[0], o[1]
-            x1_warp = x1+o_x
-            y1_warp = y1+o_y
-            loss += (x1_warp-x2)**2 + (y1_warp-y2)**2
-    loss = loss / (2*B)
+    
+    W, H = flow.shape[-2], flow.shape[-1]
+    
+    flow_x = flow[:,0:1,:,:] # [B,1,W,H]
+    flow_y = flow[:,1:2,:,:]
+    
+    x_normalized = source_lm[:,:,0:1] / (W/2) - 1
+    y_normalized = source_lm[:,:,1:2] / (H/2) - 1
+    source_lm_norm = torch.cat([x_normalized, y_normalized], dim=2).unsqueeze(1)
+    
+    dx = F.grid_sample(flow_x, source_lm_norm, align_corners=False) # [B,1,1,N]
+    dy = F.grid_sample(flow_y, source_lm_norm, align_corners=False) 
+    dx = dx.squeeze(dim=1).permute(0,2,1) # [B,N,1]
+    dy = dy.squeeze(dim=1).permute(0,2,1)
+    d = torch.cat([dx,dy], dim=2)
+    
+    warp_lm = source_lm + d
+    
+    loss = F.mse_loss(warp_lm, target_lm)
+    
     return loss
 
 
 class LandmarkLoss(nn.Module):
-    """ 
-        landmarks: cords of each paired landmarks [B,n,4]
+    """ source_lm, target_lm: source/target landmarks [B,N,2]
         flow: offset of the flow [B,2,W,H]
     """
 
-    def forward(self, landmarks, flow):
-        return landmark_loss(landmarks, flow)
+    def forward(self, source_lm, target_lm, flow):
+        return landmark_loss(source_lm, target_lm, flow)
 
 
 def match_landmark_sift_knn_bbs(img1, img2):
@@ -103,7 +101,7 @@ def match_landmark_sift_knn_bbs(img1, img2):
         (x1, y1) = kp1[img1_id1].pt
         (x2, y2) = kp2[img2_id1].pt
 
-        match_points.append((x1, y1, x2, y2))
+        match_points.append((y1,x1,y2,x2)) # in opencv, x -> H, y -> W
 
     visualize = cv2.drawMatchesKnn(t1, kp1, t2, kp2, good, None, [0, 0, 255], flags=2)
 
