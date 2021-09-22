@@ -39,15 +39,15 @@ class SAMLoss(torch.nn.Module):
         return out / x1.shape[0]
 
 
-def charbonnier_loss(pred, gt, eps=1e-3):
+def charbonnier_loss2(pred, gt, eps=1e-3):
     N = pred.shape[0]
     diff = torch.sum(torch.sqrt((pred - gt).pow(2) + eps**2)) / N
     return diff
 
 
-class CharbonnierLoss(nn.Module):
+class CharbonnierLoss2(nn.Module):
     def __init__(self, eps=1e-3):
-        super(CharbonnierLoss, self).__init__()
+        super(CharbonnierLoss2, self).__init__()
         self.eps = eps
 
     def forward(self, pre, gt):
@@ -56,17 +56,20 @@ class CharbonnierLoss(nn.Module):
         return diff
 
 
-class CharbonnierLoss2(nn.Module):
-    """Charbonnier Loss (L1)"""
+def charbonnier_loss(x, y, eps=1e-3):
+    diff = x - y
+    loss = torch.mean(torch.sqrt((diff * diff) + (eps*eps)))
+    return loss
 
+
+class CharbonnierLoss(nn.Module):
+    """Charbonnier Loss (L1)"""
     def __init__(self, eps=1e-3):
         super(CharbonnierLoss, self).__init__()
         self.eps = eps
 
     def forward(self, x, y):
-        diff = x - y
-        loss = torch.mean(torch.sqrt((diff * diff) + (self.eps*self.eps)))
-        return loss
+        return charbonnier_loss(x, y, self.eps)
 
 
 class EdgeLoss(nn.Module):
