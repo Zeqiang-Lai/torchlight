@@ -3,23 +3,7 @@ import torch.nn as nn
 import torch.functional as F
 import torch.fft as fft
 
-
-class MultipleLoss(nn.Module):
-    def __init__(self, losses, weight=None):
-        super(MultipleLoss, self).__init__()
-        self.losses = nn.ModuleList(losses)
-        self.weight = weight or [1 / len(self.losses)] * len(self.losses)
-
-    def forward(self, predict, target):
-        total_loss = 0
-        for weight, loss in zip(self.weight, self.losses):
-            l = loss(predict, target)
-            total_loss += l * weight
-            # print(l.item(), weight)
-        return total_loss
-
-    def extra_repr(self):
-        return 'weight={}'.format(self.weight)
+from .functional import charbonnier_loss
 
 
 class SAMLoss(torch.nn.Module):
@@ -39,31 +23,9 @@ class SAMLoss(torch.nn.Module):
         return out / x1.shape[0]
 
 
-def charbonnier_loss2(pred, gt, eps=1e-3):
-    N = pred.shape[0]
-    diff = torch.sum(torch.sqrt((pred - gt).pow(2) + eps**2)) / N
-    return diff
-
-
-class CharbonnierLoss2(nn.Module):
-    def __init__(self, eps=1e-3):
-        super(CharbonnierLoss2, self).__init__()
-        self.eps = eps
-
-    def forward(self, pre, gt):
-        N = pre.shape[0]
-        diff = torch.sum(torch.sqrt((pre - gt).pow(2) + self.eps**2)) / N
-        return diff
-
-
-def charbonnier_loss(x, y, eps=1e-3):
-    diff = x - y
-    loss = torch.mean(torch.sqrt((diff * diff) + (eps*eps)))
-    return loss
-
-
 class CharbonnierLoss(nn.Module):
     """Charbonnier Loss (L1)"""
+
     def __init__(self, eps=1e-3):
         super(CharbonnierLoss, self).__init__()
         self.eps = eps
