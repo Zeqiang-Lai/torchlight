@@ -1,5 +1,7 @@
 import time
 import shutil
+import os
+
 from numpy import inf
 
 
@@ -16,6 +18,43 @@ def text_divider(sym, text='', ncols=None):
     right = ncols - left
     divider = sym*(left-len(text)) + text + sym*right
     return divider
+
+
+class CheckpointCleaner:
+    def __init__(self, root, keep='all'):
+        """ This class provide the ability to control the storage size of checkpoints. 
+
+            Args:
+                root: root dir path of checkpoints
+                keep: the mode to control storage. Defaults to 'all'. The valid choice includes
+                      `all`: keep all checkpoints, `latest_#`: keep latest n checkpoints
+        """
+        self.root = root
+        self.mode = keep
+        self._check_mode()
+    
+    def _check_mode(self):
+        if self.mode.startswith('latest'):
+            n = int(self.mode.split('_')[-1])
+        elif self.mode == 'all':
+            return 
+        else:
+            raise ValueError(f'Invalid mode {self.mode}')
+            
+            
+    def clean(self):
+        file_names = os.listdir(self.root)
+        file_names = filter(lambda x: x.endswith('.pth'), file_names)
+        file_names = filter(lambda x: 'best' not in x, file_names)
+        file_names = [os.path.join(self.root, n) for n in file_names]
+        file_names = sorted(file_names, key=lambda x: os.path.getctime(x), reverse=True)
+
+        if self.mode == 'all':
+            return
+        elif self.mode.startswith('latest'):
+            n = int(self.mode.split('_')[-1])
+            for path in file_names[n:]:
+                os.remove(path)
 
 
 class Timer:

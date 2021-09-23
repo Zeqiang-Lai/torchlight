@@ -11,7 +11,7 @@ import readchar
 
 from .logging.logger import Logger
 from .module import Module
-from ._util import Timer, MetricTracker, PerformanceMonitor, text_divider, format_num
+from ._util import Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner, text_divider, format_num
 
 init(autoreset=True)
 
@@ -42,7 +42,7 @@ class EngineConfig(NamedTuple):
 
     pbar: str = 'tqdm'
     num_fmt: str = '{:8.5g}'
-
+    ckpt_save_mode: str = 'all'
 
 class Engine:
     def __init__(self, module: Module, save_dir):
@@ -51,6 +51,7 @@ class Engine:
         self.cfg = EngineConfig()
         self.logger = Logger(self.experiment.log_dir)
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
+        self.ckpt_cleaner = CheckpointCleaner(self.experiment.ckpt_dir, keep=self.cfg.ckpt_save_mode)
         self.start_epoch = 1
         self.debug_mode = False
 
@@ -239,6 +240,8 @@ class Engine:
             torch.save(state, best_path)
             self.logger.info("Saving current best: {} ...".format(best_path))
 
+        self.ckpt_cleaner.clean()
+        
     def _resume_checkpoint(self, resume_path):
         """
         Resume from saved checkpoints
