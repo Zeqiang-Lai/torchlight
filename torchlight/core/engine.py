@@ -1,40 +1,19 @@
 from typing import NamedTuple
 from pathlib import Path
 import os
-import time
-import shutil
 
 import torch
 from torchvision.utils import make_grid
 from tqdm import tqdm
 from qqdm import qqdm
-from numpy import inf
 from colorama import Fore, init
 import readchar
 
 from .logging.logger import Logger
 from .module import Module
+from ._util import Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner, text_divider, format_num
 
 init(autoreset=True)
-
-
-class Timer:
-    def __init__(self):
-        self._start_time = 0
-
-    def tic(self):
-        self._start_time = time.time()
-
-    def tok(self):
-        now = time.time()
-        used = int(now - self._start_time)
-        second = used % 60
-        used = used // 60
-        minutes = used % 60
-        used = used // 60
-        hours = used
-        return "{}:{}:{}".format(hours, minutes, second)
-
 
 timer = Timer()
 
@@ -63,7 +42,7 @@ class EngineConfig(NamedTuple):
 
     pbar: str = 'tqdm'
     num_fmt: str = '{:8.5g}'
-
+    ckpt_save_mode: str = 'all'
 
 class Engine:
     def __init__(self, module: Module, save_dir):
@@ -72,6 +51,7 @@ class Engine:
         self.cfg = EngineConfig()
         self.logger = Logger(self.experiment.log_dir)
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
+        self.ckpt_cleaner = CheckpointCleaner(self.experiment.ckpt_dir, keep=self.cfg.ckpt_save_mode)
         self.start_epoch = 1
         self.debug_mode = False
 
@@ -192,7 +172,7 @@ class Engine:
                     img_name = os.path.join('train', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
-            pbar.set_postfix(self.format_nums(metric_tracker.result()))
+            pbar.set_postfix(self._format_nums(metric_tracker.result()))
             pbar.update()
 
             if self.debug_mode:
@@ -229,7 +209,7 @@ class Engine:
                     img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
-                pbar.set_postfix(self.format_nums(metric_tracker.result()))
+                pbar.set_postfix(self._format_nums(metric_tracker.result()))
                 pbar.update()
 
                 if self.debug_mode:
@@ -260,6 +240,8 @@ class Engine:
             torch.save(state, best_path)
             self.logger.info("Saving current best: {} ...".format(best_path))
 
+        self.ckpt_cleaner.clean()
+        
     def _resume_checkpoint(self, resume_path):
         """
         Resume from saved checkpoints
@@ -294,7 +276,7 @@ class Engine:
     def _show_divider(self, sym, text='', ncols=None):
         print(text_divider(sym, text, ncols))
 
-    def format_nums(self, d):
+    def _format_nums(self, d):
         return {k: format_num(v, fmt=self.cfg.num_fmt) for k, v in d.items()}
 
 
@@ -302,84 +284,3 @@ def _progress(batch_idx, loader):
     current = batch_idx * loader.batch_size
     total = len(loader) * loader.batch_size
     return '[{}/{} ({:.0f}%)]'.format(current, total, 100.0 * current / total)
-
-
-def format_num(n, fmt='{0:.3g}'):
-    f = fmt.format(n).replace('+0', '+').replace('-0', '-')
-    n = str(n)
-    return f if len(f) < len(n) else n
-
-
-def text_divider(sym, text='', ncols=None):
-    if ncols is None:
-        ncols = shutil.get_terminal_size()[0]
-    left = ncols // 2
-    right = ncols - left
-    divider = sym*(left-len(text)) + text + sym*right
-    return divider
-
-
-class MetricTracker:
-    def __init__(self):
-        self._data = {}
-        self.reset()
-
-    def reset(self):
-        self._data = {}
-
-    def update(self, key, value, n=1):
-        if key not in self._data.keys():
-            self._data[key] = {'total': 0, 'count': 0}
-        self._data[key]['total'] += value * n
-        self._data[key]['count'] += n
-
-    def avg(self, key):
-        return self._data[key]['total'] / self._data[key]['count']
-
-    def result(self):
-        return {k: self._data[k]['total'] / self._data[k]['count'] for k in self._data.keys()}
-
-    def summary(self):
-        items = ['{}: {:.8f}'.format(k, v) for k, v in self.result().items()]
-        return ' '.join(items)
-
-
-class PerformanceMonitor:
-    def __init__(self, mnt_mode, early_stop_threshold=0.1):
-        self.mnt_mode = mnt_mode
-        self.early_stop_threshold = early_stop_threshold
-
-        assert self.early_stop_threshold > 0, 'early_stop_threshold should be greater than 0'
-        assert self.mnt_mode in ['min', 'max']
-
-        self.reset()
-
-    def update(self, metric):
-        improved = (self.mnt_mode == 'min' and metric <= self.mnt_best) or \
-                   (self.mnt_mode == 'max' and metric >= self.mnt_best)
-        self.best = False
-        if improved:
-            self.mnt_best = metric
-            self.not_improved_count = 0
-            self.best = True
-        else:
-            self.not_improved_count += 1
-
-    def is_best(self):
-        return self.best == True
-
-    def should_early_stop(self):
-        return self.not_improved_count > self.early_stop_threshold
-
-    def reset(self):
-        self.not_improved_count = 0
-        self.mnt_best = inf if self.mnt_mode == 'min' else -inf
-        self.best = False
-
-    def state_dict(self):
-        return {'not_improved_count': self.not_improved_count, 'mnt_best': self.mnt_best, 'best': self.best}
-
-    def load_state_dict(self, states):
-        self.not_improved_count = states['not_improved_count']
-        self.mnt_best = states['mnt_best']
-        self.best = states['best']
