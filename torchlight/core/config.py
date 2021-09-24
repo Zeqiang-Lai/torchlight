@@ -94,8 +94,8 @@ def set_by_path(root, items, value):
 def _eval(val):
     try:
         val = ast.literal_eval(val)
-    except ValueError:
-        pass
+    except:
+        return val
     return val
 
 
