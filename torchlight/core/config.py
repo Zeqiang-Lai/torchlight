@@ -1,3 +1,6 @@
+import operator
+from functools import reduce
+import ast
 import argparse
 from pathlib import Path
 import json
@@ -39,6 +42,9 @@ def basic_args(description=''):
                       help='path of log directory (default: saved)')
     args.add_argument('-n', '--new_save_dir', default=None, type=str,
                       help='path of new log directory (default: new_saved)')
+    args.add_argument('--override', default=None, type=str,
+                      help='custom value to override the corrsponding key in config file.'
+                      'format: "key.key=value; key2=value2", each KV pair must be seperate by a semicolon.')
     args = args.parse_args()
 
     vars(args)['resume_dir'] = args.save_dir
@@ -65,7 +71,55 @@ def basic_args(description=''):
         cmd = 'python ' + ' '.join(sys.argv) + '\n'
         f.write(cmd)
 
+    _set_custom_args(cfg, args.override)
+
     return args, Munch.fromDict(cfg)
+
+
+# ---------------------------------------------------------------------------- #
+#                          Parse custom overried args                          #
+# ---------------------------------------------------------------------------- #
+
+
+def get_by_path(root, items):
+    """Access a nested object in root by item sequence."""
+    return reduce(operator.getitem, items, root)
+
+
+def set_by_path(root, items, value):
+    """Set a value in a nested object in root by item sequence."""
+    get_by_path(root, items[:-1])[items[-1]] = value
+
+
+def _eval(val):
+    try:
+        val = ast.literal_eval(val)
+    except ValueError:
+        pass
+    return val
+
+
+def _set_custom_args(origin: dict, override: str):
+    """ --override "module.lr=0.01; engine.max_epochs=10"
+    """
+    if override is None:
+        return
+    options = override.split(';')
+    for option in options:
+        keys, value = tuple(option.split('='))
+        keys = keys.split('.')
+        value = _eval(value)
+
+        # check if types match
+        old_value = get_by_path(origin, keys)
+        assert type(old_value) == type(value),\
+            f'Types of custom arg and origin one not match. Old:{type(old_value)}({old_value}), New:{type(value)}({value})'
+
+        set_by_path(origin, keys, value)
+
+# ---------------------------------------------------------------------------- #
+#                            Read/Write config file                            #
+# ---------------------------------------------------------------------------- #
 
 
 def read_json(fname):

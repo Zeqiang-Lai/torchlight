@@ -16,6 +16,7 @@ pip install -e . # editable installation
 - Debug Mode 
 - User friendly progress bar 
 - Save latest checkpoint if interrupted by Ctrl-C
+- Override any option in configuration file with cmd args
 
 ## A Minimal Example
 
@@ -89,3 +90,8 @@ if __name__ == '__main__':
     engine = torchlight.Engine(module, save_dir='experiments/simple_l1')
     engine.train(train_loader, valid_loader=test_loader)
 ```
+
+## Related Project
+
+- [kornia](https://github.com/kornia/kornia): Open Source Differentiable Computer Vision Library
+- [accelerate](https://github.com/huggingface/accelerate/): A simple way to train and use PyTorch models with multi-GPU, TPU, mixed-precision
