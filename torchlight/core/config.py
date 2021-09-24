@@ -99,15 +99,19 @@ def _eval(val):
     return val
 
 
+def _remove_whitespace(array):
+    return [s.strip() for s in array]
+
+
 def _set_custom_args(origin: dict, override: str):
     """ --override "module.lr=0.01; engine.max_epochs=10"
     """
     if override is None:
         return
-    options = override.split(';')
+    options = _remove_whitespace(override.split(';'))
     for option in options:
-        keys, value = tuple(option.split('='))
-        keys = keys.split('.')
+        keys, value = tuple(_remove_whitespace(option.split('=')))
+        keys = _remove_whitespace(keys.split('.'))
         value = _eval(value)
 
         # check if types match
