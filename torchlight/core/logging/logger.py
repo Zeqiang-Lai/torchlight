@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 import os
 import yaml
-
+import importlib 
+from datetime import datetime
 
 from torchvision.utils import save_image
 
@@ -49,18 +50,19 @@ def get_logger(name, save_dir, verbosity=2):
 
 
 class Logger:
-    def __init__(self, log_dir: Path):
+    def __init__(self, log_dir: Path, enable_tensorboard=False):
         self.log_dir = log_dir
         self.tensorboard_ = None
+        self.enable_tensorboard = enable_tensorboard
         self.text = get_logger('Torchlight', log_dir)
         self.img_dir = log_dir / 'img'
 
     @property
     def tensorboard(self):
         if self.tensorboard_ is None:
-            from torch.utils.tensorboard import SummaryWriter
             tensorboard_dir = os.path.join(self.log_dir, 'tensorboard')
-            self.tensorboard_ = SummaryWriter(log_dir=tensorboard_dir)
+            self.tensorboard_ = TensorboardWriter(tensorboard_dir, logger=self, 
+                                                  enabled=self.enable_tensorboard)
         return self.tensorboard_
 
     def info(self, msg):
@@ -77,3 +79,74 @@ class Logger:
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
         save_image(img, save_path)
+
+
+class TensorboardWriter():
+    def __init__(self, log_dir, logger, enabled):
+        self.writer = None
+        self.selected_module = ""
+
+        if enabled:
+            log_dir = str(log_dir)
+
+            # Retrieve vizualization writer.
+            succeeded = False
+            for module in ["torch.utils.tensorboard", "tensorboardX"]:
+                try:
+                    self.writer = importlib.import_module(module).SummaryWriter(log_dir)
+                    succeeded = True
+                    break
+                except ImportError:
+                    succeeded = False
+                self.selected_module = module
+
+            if not succeeded:
+                message = "Warning: visualization (Tensorboard) is configured to use, but currently not installed on " \
+                    "this machine. Please install TensorboardX with 'pip install tensorboardx', upgrade PyTorch to " \
+                    "version >= 1.1 to use 'torch.utils.tensorboard' or turn off the option in the 'config.json' file."
+                logger.warning(message)
+
+        self.step = 0
+        self.mode = ''
+
+        self.tb_writer_ftns = {
+            'add_scalar', 'add_scalars', 'add_image', 'add_images', 'add_audio',
+            'add_text', 'add_histogram', 'add_pr_curve', 'add_embedding'
+        }
+        self.tag_mode_exceptions = {'add_histogram', 'add_embedding'}
+        self.timer = datetime.now()
+
+    def set_step(self, step, mode='train'):
+        self.mode = mode
+        self.step = step
+        if step == 0:
+            self.timer = datetime.now()
+        else:
+            duration = datetime.now() - self.timer
+            self.add_scalar('steps_per_sec', 1 / duration.total_seconds())
+            self.timer = datetime.now()
+
+    def __getattr__(self, name):
+        """
+        If visualization is configured to use:
+            return add_data() methods of tensorboard with additional information (step, tag) added.
+        Otherwise:
+            return a blank function handle that does nothing
+        """
+        if name in self.tb_writer_ftns:
+            add_data = getattr(self.writer, name, None)
+
+            def wrapper(tag, data, *args, **kwargs):
+                if add_data is not None:
+                    # add mode(train/valid) tag
+                    if name not in self.tag_mode_exceptions:
+                        tag = '{}/{}'.format(tag, self.mode)
+                    add_data(tag, data, self.step, *args, **kwargs)
+            return wrapper
+        else:
+            # default action for returning methods defined in this class, set_step() for instance.
+            try:
+                attr = object.__getattr__(name)
+            except AttributeError:
+                raise AttributeError("type object '{}' has no attribute '{}'".format(self.selected_module, name))
+            return attr

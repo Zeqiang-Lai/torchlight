@@ -43,18 +43,22 @@ class EngineConfig(NamedTuple):
     pbar: str = 'tqdm'
     num_fmt: str = '{:8.5g}'
     ckpt_save_mode: str = 'all'
+    enable_tensorboard: bool = False
 
 class Engine:
-    def __init__(self, module: Module, save_dir):
+    def __init__(self, module: Module, save_dir, **kwargs):
         self.module = module
         self.experiment = Experiment(save_dir).create()
-        self.cfg = EngineConfig()
-        self.logger = Logger(self.experiment.log_dir)
+        self.cfg = EngineConfig(**kwargs)
+        self.logger = Logger(self.experiment.log_dir, self.cfg.enable_tensorboard)
         self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
         self.ckpt_cleaner = CheckpointCleaner(self.experiment.ckpt_dir, keep=self.cfg.ckpt_save_mode)
         self.start_epoch = 1
         self.debug_mode = False
+        
+        self.ckpt_cleaner.clean()
 
+    # TODO: some option such as ckpt_save_mode cannot be reset via this method
     def config(self, **kwargs):
         self.cfg = EngineConfig(**kwargs)
         return self
@@ -157,11 +161,11 @@ class Engine:
         for batch_idx, data in enumerate(train_loader):
             gstep = (epoch - 1) * len_epoch + batch_idx + 1
             results = self.module.step(data, train=True, epoch=epoch, step=gstep)
-
-            # self.logger.tensorboard.set_step(gstep, 'train')
+            
+            self.logger.tensorboard.set_step(gstep, mode='train')
             for name, value in results.metrics.items():
                 metric_tracker.update(name, value)
-            #     self.logger.tensorboard.add_scalar(name, value, gstep)
+                self.logger.tensorboard.add_scalar(name, value, gstep)
 
             if gstep % self.cfg.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} {}'.format(epoch,
@@ -202,9 +206,11 @@ class Engine:
                 gstep = (epoch - 1) * len_epoch + batch_idx + 1
                 results = self.module.step(data, train=False, epoch=epoch, step=gstep)
 
+                self.logger.tensorboard.set_step(gstep, mode='valid')
                 for name, value in results.metrics.items():
                     metric_tracker.update(name, value, gstep)
-
+                    self.logger.tensorboard.add_scalar(name, value, gstep)
+                    
                 for name, img in results.imgs.items():
                     img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
