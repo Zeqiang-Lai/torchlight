@@ -1,3 +1,4 @@
+import collections
 import operator
 from functools import reduce
 import ast
@@ -32,8 +33,8 @@ def basic_args(description=''):
     args = argparse.ArgumentParser(description=description)
     args.add_argument('mode', type=str, help='running mode',
                       choices=['train', 'test', 'debug'])
-    args.add_argument('-c', '--config', default=None, type=str,
-                      help='config file path (default: None)')
+    args.add_argument('-c', '--config', nargs='*', default=None, type=str,
+                      help='config file(s) path (default: None)')
     args.add_argument('-r', '--resume', default=None, type=str,
                       help='resume to # checkpoint (default: None), e.g. best | latest | epoch# or a complete path')
     args.add_argument('-d', '--device', default='cuda', type=str,
@@ -58,13 +59,13 @@ def basic_args(description=''):
     if resume_config_path.exists():
         cfg = read_yaml(resume_config_path)
         if args.config:
-            cfg.update(read_yaml(args.config))
+            deep_update(cfg, read_config(args.config))
     else:
         if args.config is None:
             print(Fore.RED + 'Warning: default config not founded, forgot to specify a configuration file?')
             cfg = {'engine': {}}
         else:
-            cfg = read_yaml(args.config)
+            cfg = read_config(args.config)
 
     os.makedirs(os.path.join(args.save_dir, 'history'), exist_ok=True)
     with open(os.path.join(args.save_dir, 'history', 'cmd.log'), 'a') as f:
@@ -75,6 +76,26 @@ def basic_args(description=''):
 
     return args, Munch.fromDict(cfg)
 
+
+def deep_update(source, overrides):
+    """
+    Update a nested dictionary or similar mapping.
+    Modify ``source`` in place.
+    """
+    for key, value in overrides.items():
+        if isinstance(value, collections.Mapping) and value:
+            returned = deep_update(source.get(key, {}), value)
+            source[key] = returned
+        else:
+            source[key] = overrides[key]
+    return source
+
+
+def read_config(configs):
+    cfg = {}
+    for config in configs:
+        deep_update(cfg, read_yaml(config))
+    return cfg
 
 # ---------------------------------------------------------------------------- #
 #                          Parse custom overried args                          #
