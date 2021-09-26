@@ -94,8 +94,8 @@ class Engine:
                 return
 
             if self.cfg.enable_early_stop and self.monitor.should_early_stop(self.cfg.early_stop_count):
-                self.logger.info(Fore.RED + "Validation performance didn\'t improve for {} epochs. "
-                                 "Training stops.".format(self.monitor.not_improved_count) + Fore.RESET)
+                self.logger.warning("Validation performance didn\'t improve for {} epochs. "
+                                 "Training stops.".format(self.monitor.not_improved_count))
                 break
 
     # TODO: use this function to support mannuly control training dataloader outside of engine
@@ -249,7 +249,7 @@ class Engine:
         if save_best:
             best_path = str(self.experiment.ckpt_dir / 'model-best.pth')
             torch.save(state, best_path)
-            self.logger.info(Fore.RED + "Saving current best: {} ...".format(best_path) + Fore.RESET)
+            self.logger.warning("Saving current best: {} ...".format(best_path))
 
         self.ckpt_cleaner.clean()
 

@@ -8,7 +8,7 @@ import importlib
 from datetime import datetime
 
 from torchvision.utils import save_image
-
+import colorlog
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -44,7 +44,7 @@ def get_logger(name, save_dir, verbosity=2):
     msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(
         verbosity, log_levels.keys())
     assert verbosity in log_levels, msg_verbosity
-    logger = logging.getLogger(name)
+    logger = colorlog.getLogger(name)
     logger.setLevel(log_levels[verbosity])
     return logger
 
