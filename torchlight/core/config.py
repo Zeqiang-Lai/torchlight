@@ -93,7 +93,16 @@ def deep_update(source, overrides):
 
 def read_config(configs):
     cfg = {}
+    # the first must be full path, can omit extension, 
+    # the subseqeunt can use file name only
+    base_dir = os.path.dirname(configs[0])
     for config in configs:
+        # if without extension, append it
+        if not config.endswith('.yaml'):
+            config = config + '.yaml'
+        # if file not exists, try add base_dir
+        if not os.path.exists(config):
+            config = os.path.join(base_dir, config)
         deep_update(cfg, read_yaml(config))
     return cfg
 
