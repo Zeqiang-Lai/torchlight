@@ -39,11 +39,15 @@ class EngineConfig(NamedTuple):
 
     mnt_mode: str = 'min'
     mnt_metric: str = 'loss'
+    enable_early_stop: bool = False
+    early_stop_threshold: float = 0.01
+    early_stop_count: int = 5
 
     pbar: str = 'tqdm'
     num_fmt: str = '{:8.5g}'
     ckpt_save_mode: str = 'all'
     enable_tensorboard: bool = False
+
 
 class Engine:
     def __init__(self, module: Module, save_dir, **kwargs):
@@ -51,11 +55,11 @@ class Engine:
         self.experiment = Experiment(save_dir).create()
         self.cfg = EngineConfig(**kwargs)
         self.logger = Logger(self.experiment.log_dir, self.cfg.enable_tensorboard)
-        self.monitor = PerformanceMonitor(self.cfg.mnt_mode)
+        self.monitor = PerformanceMonitor(self.cfg.mnt_mode, self.cfg.early_stop_threshold)
         self.ckpt_cleaner = CheckpointCleaner(self.experiment.ckpt_dir, keep=self.cfg.ckpt_save_mode)
         self.start_epoch = 1
         self.debug_mode = False
-        
+
         self.ckpt_cleaner.clean()
 
     # TODO: some option such as ckpt_save_mode cannot be reset via this method
@@ -89,6 +93,11 @@ class Engine:
                     self._save_checkpoint(epoch)
                 return
 
+            if self.cfg.enable_early_stop and self.monitor.should_early_stop(self.cfg.early_stop_count):
+                self.logger.info(Fore.RED + "Validation performance didn\'t improve for {} epochs. "
+                                 "Training stops.".format(self.monitor.not_improved_count) + Fore.RESET)
+                break
+
     # TODO: use this function to support mannuly control training dataloader outside of engine
     def _train(self, train_loader, epoch, valid_loader=None):
         timer.tic()
@@ -109,18 +118,14 @@ class Engine:
 
         self._log_log(log)
 
-        # # evaluate model performance according to configured metric, save best checkpoint as model_best
-        if self.cfg.mnt_mode != 'off':
-            assert self.cfg.mnt_metric in log.keys(), '%s not in log keys' % self.cfg.mnt_metric
-            self.monitor.update(log[self.cfg.mnt_metric])
-        #     if self.monitor.should_early_stop():
-        #         self.logger.info("Validation performance didn\'t improve for {} epochs. "
-        #                          "Training stops.".format(self.early_stop))
-        #         break
+        # # evaluate model performance according to configured metric
+        assert self.cfg.mnt_metric in log.keys(), '%s not in log keys' % self.cfg.mnt_metric
+        self.monitor.update(log[self.cfg.mnt_metric], info={'epoch': epoch})
+        self.logger.info('PeformenceMonitor: ' + str(self.monitor.state_dict()))
 
         # save checkpoint
         if epoch % self.cfg.save_per_epoch == 0:
-            is_best = self.monitor.is_best() if self.cfg.mnt_mode != 'off' else False
+            is_best = self.monitor.is_best()
             self._save_checkpoint(epoch, save_best=is_best)
 
     def test(self, test_loader, name=None):
@@ -161,7 +166,7 @@ class Engine:
         for batch_idx, data in enumerate(train_loader):
             gstep = (epoch - 1) * len_epoch + batch_idx + 1
             results = self.module.step(data, train=True, epoch=epoch, step=gstep)
-            
+
             self.logger.tensorboard.set_step(gstep, mode='train')
             for name, value in results.metrics.items():
                 metric_tracker.update(name, value)
@@ -210,7 +215,7 @@ class Engine:
                 for name, value in results.metrics.items():
                     metric_tracker.update(name, value, gstep)
                     self.logger.tensorboard.add_scalar(name, value, gstep)
-                    
+
                 for name, img in results.imgs.items():
                     img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                     self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
@@ -244,10 +249,10 @@ class Engine:
         if save_best:
             best_path = str(self.experiment.ckpt_dir / 'model-best.pth')
             torch.save(state, best_path)
-            self.logger.info("Saving current best: {} ...".format(best_path))
+            self.logger.info(Fore.RED + "Saving current best: {} ...".format(best_path) + Fore.RESET)
 
         self.ckpt_cleaner.clean()
-        
+
     def _resume_checkpoint(self, resume_path):
         """
         Resume from saved checkpoints

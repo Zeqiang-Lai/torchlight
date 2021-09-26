@@ -1,2 +1,2 @@
 engine:
-  max_epochs: 5
+  max_epochs: 20
