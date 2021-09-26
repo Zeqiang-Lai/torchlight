@@ -26,12 +26,13 @@ class SAMLoss(torch.nn.Module):
 class CharbonnierLoss(nn.Module):
     """Charbonnier Loss (L1)"""
 
-    def __init__(self, eps=1e-3):
+    def __init__(self, reduce='mean', eps=1e-3):
         super(CharbonnierLoss, self).__init__()
         self.eps = eps
+        self.reduce = reduce
 
     def forward(self, x, y):
-        return charbonnier_loss(x, y, self.eps)
+        return charbonnier_loss(x, y, self.reduce, self.eps)
 
 
 class EdgeLoss(nn.Module):

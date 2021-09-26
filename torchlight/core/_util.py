@@ -110,32 +110,36 @@ class PerformanceMonitor:
 
         self.reset()
 
-    def update(self, metric):
-        improved = (self.mnt_mode == 'min' and metric <= self.mnt_best) or \
-                   (self.mnt_mode == 'max' and metric >= self.mnt_best)
+    def update(self, metric, info=None):
+        improved = (self.mnt_mode == 'min' and self.mnt_best - metric >= self.early_stop_threshold) or \
+                   (self.mnt_mode == 'max' and metric - self.mnt_best >= self.early_stop_threshold)
         self.best = False
         if improved:
             self.mnt_best = metric
             self.not_improved_count = 0
             self.best = True
+            self.mnt_best_info = info
         else:
             self.not_improved_count += 1
 
     def is_best(self):
         return self.best == True
 
-    def should_early_stop(self):
-        return self.not_improved_count > self.early_stop_threshold
+    def should_early_stop(self, not_improved_count=5):
+        return self.not_improved_count >= not_improved_count
 
     def reset(self):
         self.not_improved_count = 0
         self.mnt_best = inf if self.mnt_mode == 'min' else -inf
         self.best = False
+        self.mnt_best_info = None
 
     def state_dict(self):
-        return {'not_improved_count': self.not_improved_count, 'mnt_best': self.mnt_best, 'best': self.best}
+        return {'not_improved_count': self.not_improved_count, 'mnt_best': self.mnt_best, 
+                'best': self.best, 'mnt_best_info': self.mnt_best_info}
 
     def load_state_dict(self, states):
         self.not_improved_count = states['not_improved_count']
         self.mnt_best = states['mnt_best']
         self.best = states['best']
+        self.mnt_best_info = states.get('mnt_best_info')

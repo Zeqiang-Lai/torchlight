@@ -21,8 +21,7 @@ def run(args, cfg,
         ``` 
     """
 
-    engine = Engine(module, save_dir=args.save_dir)
-    engine.config(**cfg['engine'])
+    engine = Engine(module, save_dir=args.save_dir, **cfg['engine'])
 
     if args.mode == 'train':
         cfg['engine'].update(engine.cfg._asdict())
