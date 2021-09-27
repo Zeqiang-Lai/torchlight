@@ -265,11 +265,10 @@ class Engine:
         self.start_epoch = checkpoint['epoch'] + 1
         self.epoch = self.start_epoch
 
-        if self.cfg.mnt_mode != 'off':
-            if 'monitor' in checkpoint:
-                self.monitor.load_state_dict(checkpoint['monitor'])
-            else:
-                self.logger.info("Monitor state dict not found, default value will be used.")
+        if 'monitor' in checkpoint:
+            self.monitor.load_state_dict(checkpoint['monitor'])
+        else:
+            self.logger.info("Monitor state dict not found, default value will be used.")
 
         self.module.load_state_dict(checkpoint['module'])
 
