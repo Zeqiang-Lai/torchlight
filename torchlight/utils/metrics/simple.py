@@ -1,7 +1,18 @@
 import torch
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
-from functools import partial
+
+from ._util import enable_batch_input, torch2numpy, bandwise
+
+__all__ = [
+    'accuracy',
+    'top_k_acc',
+    'psnr',
+    'ssim',
+    'sam',
+    'mpsnr',
+    'mssim'
+]
 
 
 def accuracy(output, target):
@@ -25,28 +36,24 @@ def top_k_acc(output, target, k=3):
 # B, C, H, W  | C, H, W
 
 
-def _cal_metric(img_gt, img_test, index_fn):
-    assert img_test.shape == img_gt.shape
-
-    if len(img_test.shape) == 4:
-        b = img_test.shape[0]
-        out = [index_fn(img_gt[i], img_test[i]) for i in range(b)]
-        return out
-
-    return index_fn(img_gt, img_test)
+@enable_batch_input()
+@torch2numpy
+def psnr(output, target, data_range=1):
+    return peak_signal_noise_ratio(target, output, data_range=data_range)
 
 
-def psnr(img_test, img_gt, data_range=1):
-    fn = partial(peak_signal_noise_ratio, data_range=data_range)
-    return _cal_metric(img_gt, img_test, fn)
+@enable_batch_input()
+@torch2numpy
+def ssim(img1, img2, **kwargs):
+    # CHW -> HWC
+    img1 = img1.transpose(1,2,0)
+    img2 = img2.transpose(1,2,0)
+    return structural_similarity(img1, img2, multichannel=True, **kwargs)
 
 
-def ssim(img1, img2):
-    fn = structural_similarity
-    return _cal_metric(img1, img2, fn)
-
-
-def _sam(img1, img2, eps=1e-8):
+@enable_batch_input()
+@torch2numpy
+def sam(img1, img2, eps=1e-8):
     tmp1 = np.sum(img1*img2, axis=0) + eps
     tmp2 = np.sqrt(np.sum(img1**2, axis=0)) + eps
     tmp3 = np.sqrt(np.sum(img2**2, axis=0)) + eps
@@ -54,21 +61,15 @@ def _sam(img1, img2, eps=1e-8):
     return np.mean(np.real(np.arccos(tmp4)))
 
 
-def sam(img1, img2, eps=1e-8):
-    fn = partial(_sam, eps=eps)
-    return _cal_metric(img1, img2, fn)
+@enable_batch_input()
+@bandwise
+@torch2numpy
+def mpsnr(output, target, data_range=1):
+    return peak_signal_noise_ratio(target, output, data_range=data_range)
 
 
-class Bandwise(object):
-    def __init__(self, metric_fn):
-        self.index_fn = metric_fn
-
-    def __call__(self, img1, img2):
-        C = x.shape[-3]
-        bwindex = []
-        for ch in range(C):
-            x = X[ch, :, :]
-            y = Y[ch, :, :]
-            index = self.index_fn(x, y)
-            bwindex.append(index)
-        return bwindex
+@enable_batch_input()
+@bandwise
+@torch2numpy
+def mssim(img1, img2, **kwargs):
+    return structural_similarity(img1, img2, **kwargs)
