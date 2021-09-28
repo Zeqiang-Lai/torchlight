@@ -98,7 +98,7 @@ class Upsample:
 
     def __init__(self, sf, mode='cubic'):
         self.sf = sf
-        self.mode = self.mode_map(mode)
+        self.mode = self.mode_map[mode]
 
     def __call__(self, img):
         return cv2.resize(img, (img.shape[1]*self.sf, img.shape[0]*self.sf), interpolation=self.mode)
