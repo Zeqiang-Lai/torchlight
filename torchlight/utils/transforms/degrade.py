@@ -93,11 +93,22 @@ class GaussianDownsample(AbstractDownsample):
 
 
 class Upsample:
-    def __init__(self, sf):
+    """ Expect input'shape = [W,H,C]
+    """
+
+    def __init__(self, sf, mode='cubic'):
         self.sf = sf
+        self.mode = self.mode_map(mode)
 
     def __call__(self, img):
-        return cv2.resize(img, (img.shape[1]*self.sf, img.shape[0]*self.sf), interpolation=cv2.INTER_CUBIC)
+        return cv2.resize(img, (img.shape[1]*self.sf, img.shape[0]*self.sf), interpolation=self.mode)
+
+    mode_map = {
+        'nearest': cv2.INTER_NEAREST,
+        'linear': cv2.INTER_LINEAR,
+        'cubic': cv2.INTER_CUBIC,
+        'area': cv2.INTER_AREA
+    }
 
 
 class HSI2RGB(object):
