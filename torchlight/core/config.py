@@ -55,8 +55,8 @@ def basic_args(description=''):
     if args.mode == 'test':
         assert args.resume is not None, 'resume cannot be None in test mode'
 
-    resume_config_path = Path(args.resume_dir) / 'config.yaml'
-    if resume_config_path.exists():
+    if args.resume:
+        resume_config_path = Path(args.resume_dir) / 'config.yaml'
         cfg = read_yaml(resume_config_path)
         if args.config:
             deep_update(cfg, read_config(args.config))
