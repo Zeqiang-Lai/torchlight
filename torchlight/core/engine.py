@@ -213,7 +213,7 @@ class Engine:
 
                 self.logger.tensorboard.set_step(gstep, mode='valid')
                 for name, value in results.metrics.items():
-                    metric_tracker.update(name, value, gstep)
+                    metric_tracker.update(name, value)
                     self.logger.tensorboard.add_scalar(name, value, gstep)
 
                 for name, img in results.imgs.items():
