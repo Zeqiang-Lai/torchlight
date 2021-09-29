@@ -34,6 +34,8 @@ class EngineConfig(NamedTuple):
     max_epochs: int = 10
     log_step: int = 20
     log_img_step: int = 20
+    valid_log_img_step: int = 1
+    
     save_per_epoch: int = 1
     valid_per_epoch: int = 1
 
@@ -216,9 +218,10 @@ class Engine:
                     metric_tracker.update(name, value)
                     self.logger.tensorboard.add_scalar(name, value, gstep)
 
-                for name, img in results.imgs.items():
-                    img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
-                    self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
+                if gstep % self.cfg.valid_log_img_step == 0:
+                    for name, img in results.imgs.items():
+                        img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
+                        self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
 
                 pbar.set_postfix(self._format_nums(metric_tracker.result()))
                 pbar.update()
