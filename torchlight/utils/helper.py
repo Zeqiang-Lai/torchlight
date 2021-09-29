@@ -1,12 +1,10 @@
 import json
-import time
 from pathlib import Path
 from collections import OrderedDict
 from functools import partial
 import os
 
 import torch
-import numpy as np
 
 
 def get_obj(info, module, *args, **kwargs):
@@ -41,12 +39,6 @@ def get_ftn(info, module, *args, **kwargs):
     module_args.update(kwargs)
     return partial(getattr(module, module_name), *args, **module_args)
 
-
-def setup_mannul_seed(seed):
-    torch.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    np.random.seed(seed)
 
 
 def adjust_learning_rate(optimizer, lr):
@@ -117,3 +109,21 @@ def auto_rename(path):
         new_file_name = '{}_{}.{}'.format(name, count, ext)
         new_path = os.path.join(os.path.dirname(path), new_file_name)
         count += 1
+
+
+class ConfigurableLossCalculator:
+    def __init__(self, cfg: dict):
+        self.cfg = cfg
+        self.loss_fns = {}
+
+    def register(self, fn, name):
+        self.loss_fns[name] = fn
+
+    def compute(self):
+        loss = 0
+        loss_dict = {}
+        for name, weight in self.cfg.items():
+            l = self.loss_fns[name]() * weight
+            loss_dict[name] = l.item()
+            loss += l
+        return loss, loss_dict
