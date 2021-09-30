@@ -6,7 +6,7 @@ import torch.nn.functional as F
 # CrossNet++: Cross-scale Large-parallax Warping for Reference-based Super-resolution
     
 
-def landmark_loss(source_lm, target_lm, flow):
+def landmark_loss(source_lm, target_lm, flow, reduce='mean'):
     """ source_lm, target_lm: [B,N,2]
         flow: offset of the flow [B,2,W,H]
     """
@@ -30,7 +30,7 @@ def landmark_loss(source_lm, target_lm, flow):
     
     warp_lm = source_lm + d
     
-    loss = F.mse_loss(warp_lm, target_lm)
+    loss = F.mse_loss(warp_lm, target_lm, reduction=reduce)
     
     return loss
 
