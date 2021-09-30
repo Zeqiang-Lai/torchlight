@@ -35,7 +35,7 @@ class EngineConfig(NamedTuple):
     log_step: int = 20
     log_img_step: int = 20
     valid_log_img_step: int = 1
-    
+
     save_per_epoch: int = 1
     valid_per_epoch: int = 1
 
@@ -92,12 +92,13 @@ class Engine:
                       "Do you want to save the latest checkpoint?" " Press y/n")
                 res = readchar.readchar()
                 if res == 'y':
-                    self._save_checkpoint(epoch)
+                    save_path = self._save_checkpoint(epoch, f'interrupt_{epoch}')
+                    self.logger.warning("Saving interrupted checkpoint: {} ...".format(save_path))
                 return
 
             if self.cfg.enable_early_stop and self.monitor.should_early_stop(self.cfg.early_stop_count):
                 self.logger.warning("Validation performance didn\'t improve for {} epochs. "
-                                 "Training stops.".format(self.monitor.not_improved_count))
+                                    "Training stops.".format(self.monitor.not_improved_count))
                 break
 
     # TODO: use this function to support mannuly control training dataloader outside of engine
@@ -106,11 +107,11 @@ class Engine:
         result = self._train_epoch(epoch, train_loader)
         self.epoch = epoch
 
-        # save logged informations into log dict
+        # ------------------ Save logged informations into log dict ------------------ #
         log = {'epoch': epoch, 'time': timer.tok()}
         log.update(result)
 
-        # print logged informations to the screen
+        # ------------------ Print logged informations to the screen ----------------- #
         if valid_loader is not None and (epoch % self.cfg.valid_per_epoch == 0 or self.debug_mode):
             val_log = self._valid_epoch(epoch, valid_loader)
             log.update(**{'val_'+k: v for k, v in val_log.items()})
@@ -120,15 +121,22 @@ class Engine:
 
         self._log_log(log)
 
-        # # evaluate model performance according to configured metric
+        # --------- Evaluate model performance according to configured metric -------- #
         assert self.cfg.mnt_metric in log.keys(), '%s not in log keys' % self.cfg.mnt_metric
         self.monitor.update(log[self.cfg.mnt_metric], info={'epoch': epoch})
         self.logger.info('PeformenceMonitor: ' + str(self.monitor.state_dict()))
 
-        # save checkpoint
+        # -------------------------- Save checkpoint -------------------------- #
+        save_path = self._save_checkpoint(epoch, postfix='latest')
+        self.logger.info("Saving latest checkpoint: {} ...".format(save_path))
+
         if epoch % self.cfg.save_per_epoch == 0:
-            is_best = self.monitor.is_best()
-            self._save_checkpoint(epoch, save_best=is_best)
+            save_path = self._save_checkpoint(epoch)
+            self.logger.info("Saving checkpoint: {} ...".format(save_path))
+
+        if self.monitor.is_best():
+            save_path = self._save_checkpoint(epoch, postfix='best')
+            self.logger.warning("Saving current best: {} ...".format(save_path))
 
     def test(self, test_loader, name=None):
         old_logger = self.logger
@@ -232,29 +240,25 @@ class Engine:
         self.module.on_epoch_end(train=False)
         return metric_tracker.result()
 
-    def _save_checkpoint(self, epoch, save_best=False):
+    def _save_checkpoint(self, epoch, postfix=None):
         """
-        Saving checkpoints
+        Saving checkpoints and return saved path
 
         :param epoch: current epoch number
-        :param log: logging information of the epoch
-        :param save_best: if True, rename the saved checkpoint to 'model_best.pth'
+        :param save_best: if True, rename the saved checkpoint to 'model-best.pth'
         """
+        if postfix is None:
+            postfix = f'epoch{epoch}'
         state = {
             'epoch': epoch,
             'module': self.module.state_dict(),
             'monitor': self.monitor.state_dict() if self.cfg.mnt_mode != 'off' else None,
             'config': self.cfg
         }
-        filename = str(self.experiment.ckpt_dir / 'model-epoch{}.pth'.format(epoch))
+        filename = str(self.experiment.ckpt_dir / f'model-{postfix}.pth')
         torch.save(state, filename)
-        self.logger.info("Saving checkpoint: {} ...".format(filename))
-        if save_best:
-            best_path = str(self.experiment.ckpt_dir / 'model-best.pth')
-            torch.save(state, best_path)
-            self.logger.warning("Saving current best: {} ...".format(best_path))
-
         self.ckpt_cleaner.clean()
+        return filename
 
     def _resume_checkpoint(self, resume_path):
         """

@@ -45,7 +45,7 @@ class CheckpointCleaner:
     def clean(self):
         file_names = os.listdir(self.root)
         file_names = filter(lambda x: x.endswith('.pth'), file_names)
-        file_names = filter(lambda x: 'best' not in x, file_names)
+        file_names = filter(lambda x: x.startswith('model-epoch'), file_names)
         file_names = [os.path.join(self.root, n) for n in file_names]
         file_names = sorted(file_names, key=lambda x: os.path.getctime(x), reverse=True)
 
