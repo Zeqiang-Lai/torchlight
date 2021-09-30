@@ -3,6 +3,8 @@ from pathlib import Path
 from collections import OrderedDict
 from functools import partial
 import os
+from operator import attrgetter
+from typing import Sequence
 
 import torch
 
@@ -21,7 +23,7 @@ def get_obj(info, module, *args, **kwargs):
     module_args.pop('type@')
     assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
     module_args.update(kwargs)
-    return getattr(module, module_name)(*args, **module_args)
+    return attrgetter(module_name)(module)(*args, **module_args)
 
 
 def get_ftn(info, module, *args, **kwargs):
@@ -87,8 +89,8 @@ def prepare_device(n_gpu_use):
 def to_device(data, device):
     if isinstance(data, torch.Tensor):
         return data.to(device).float()
-    if isinstance(data, (list, tuple)):
-        return map(partial(to_device, device=device), data)
+    if isinstance(data, Sequence):
+        return [to_device(d, device=device) for d in data]
     if isinstance(data, dict):
         return {k: to_device(v, device=device) for k, v in data.items()}
     return data
