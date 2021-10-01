@@ -43,7 +43,7 @@ def run(args, cfg,
             engine.test(test_loader)
 
         cfg['engine'].update(engine.cfg._asdict())
-        write_yaml(cfg, os.path.join(args.save_dir, 'config.yaml'))
+        write_yaml(cfg, os.path.join(engine.test_log_dir, 'config.yaml'))
     else:
         engine.set_debug_mode()
         engine.train(train_loader, valid_loader=valid_loader)
