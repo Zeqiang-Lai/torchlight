@@ -7,11 +7,13 @@ import json
 import yaml
 import sys
 import os
+import shutil
 
 from munch import Munch
 from colorama import init, Fore
 init(autoreset=True)
 
+from ._util import action_confirm
 
 def basic_args(description=''):
     """
@@ -45,12 +47,18 @@ def basic_args(description=''):
     args.add_argument('--override', default=None, type=str,
                       help='custom value to override the corrsponding key in config file.'
                       'format: "key.key=value; key2=value2", each KV pair must be seperate by a semicolon.')
+    args.add_argument('--reset', action='store_true', default=False, 
+                      help='remove the old log dir if exists, only used in train mode')
     args = args.parse_args()
 
     vars(args)['resume_dir'] = args.save_dir
     if args.new_save_dir is not None:
         args.save_dir = args.new_save_dir
 
+    if args.mode == 'train' and args.reset:
+        if action_confirm(Fore.RED + f'Do you really want to reset the old log?\nPath=({args.save_dir})'):
+            shutil.rmtree(args.save_dir)
+    
     if args.mode == 'test':
         assert args.resume is not None, 'resume cannot be None in test mode'
 

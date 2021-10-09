@@ -4,6 +4,16 @@ import os
 
 from numpy import inf
 
+
+def action_confirm(msg):
+    import readchar
+    res = ''
+    options = ['y', 'n', 'Y', 'N']
+    print(msg + " Press y/n")
+    while res not in options:
+        res = readchar.readchar()
+    return res == 'y' or res == 'Y'
+
 def auto_rename(path):
     count = 1
     new_path = path

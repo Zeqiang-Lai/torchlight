@@ -7,11 +7,10 @@ from torchvision.utils import make_grid
 from tqdm import tqdm
 from qqdm import qqdm
 from colorama import Fore, init
-import readchar
 
 from ..logging.logger import Logger
 from .module import Module
-from ._util import Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner, text_divider, format_num
+from ._util import Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner, text_divider, format_num, action_confirm
 
 init(autoreset=True)
 
@@ -83,10 +82,9 @@ class Engine:
             try:
                 self._train(train_loader, epoch, valid_loader)
             except KeyboardInterrupt:
-                print(Fore.RED + "Oops!" + Fore.RESET + " Training was terminated by Ctrl-C. "
-                      "Do you want to save the latest checkpoint?" " Press y/n")
-                res = readchar.readchar()
-                if res == 'y':
+                msg = Fore.RED + "Oops!" + Fore.RESET + " Training was terminated by Ctrl-C. "
+                "Do you want to save the latest checkpoint?"
+                if action_confirm(msg):
                     save_path = self._save_checkpoint(epoch, f'interrupt_{epoch}')
                     self.logger.warning("Saving interrupted checkpoint: {} ...".format(save_path))
                 return
