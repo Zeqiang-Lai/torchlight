@@ -28,8 +28,7 @@ if __name__ == '__main__':
     
     ## ------- run with engine, almost the same for any project ---- ## 
     print(args.save_dir)
-    engine = torchlight.Engine(module, save_dir=args.save_dir)
-    engine.config(**cfg['engine'])
+    engine = torchlight.Engine(module, save_dir=args.save_dir, **cfg['engine'])
     
     if args.mode == 'train':
         cfg['engine'].update(engine.cfg._asdict())

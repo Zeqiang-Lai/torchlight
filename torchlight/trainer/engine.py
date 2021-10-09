@@ -64,11 +64,6 @@ class Engine:
 
         self.ckpt_cleaner.clean()
 
-    # TODO: some option such as ckpt_save_mode cannot be reset via this method
-    def config(self, **kwargs):
-        self.cfg = EngineConfig(**kwargs)
-        return self
-
     def set_debug_mode(self):
         self.debug_mode = True
 
@@ -180,7 +175,7 @@ class Engine:
             self.logger.tensorboard.set_step(gstep, mode='train')
             for name, value in results.metrics.items():
                 metric_tracker.update(name, value)
-                self.logger.tensorboard.add_scalar(name, value, gstep)
+                self.logger.tensorboard.add_scalar(name, value)
 
             if gstep % self.cfg.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} {}'.format(epoch,
@@ -224,7 +219,7 @@ class Engine:
                 self.logger.tensorboard.set_step(gstep, mode='valid')
                 for name, value in results.metrics.items():
                     metric_tracker.update(name, value)
-                    self.logger.tensorboard.add_scalar(name, value, gstep)
+                    self.logger.tensorboard.add_scalar(name, value)
 
                 if gstep % self.cfg.valid_log_img_step == 0:
                     for name, img in results.imgs.items():

@@ -20,6 +20,5 @@ if __name__ == '__main__':
 
     device = torch.device('cuda')
     module = NetModule(lr=0.01, device=device)
-    engine = torchlight.Engine(module, save_dir='experiments/simple_l1', enable_tensorboard=True)
-    engine.config(pbar='tqdm')
+    engine = torchlight.Engine(module, save_dir='experiments/simple_l1', enable_tensorboard=True, pbar='tqdm')
     engine.train(train_loader, valid_loader=test_loader)
