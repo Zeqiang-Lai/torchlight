@@ -2,7 +2,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 import torchlight
-from torchlight import Module
+from torchlight.trainer import Module
 
 from net import Net
 

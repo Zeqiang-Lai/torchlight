@@ -2,7 +2,7 @@ import torch
 from torchvision import datasets, transforms
 import os
 import torchlight
-from torchlight.core.config import basic_args, write_yaml
+from torchlight.trainer.config import basic_args, write_yaml
 
 from module import NetModule
 

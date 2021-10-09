@@ -3,8 +3,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch
 from torchvision import datasets, transforms
+
 import torchlight
-from torchlight.utils.metrics import accuracy
+from torchlight.metrics import accuracy
 
 class Net(nn.Module):
     def __init__(self):

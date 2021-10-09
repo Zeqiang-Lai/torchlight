@@ -1,7 +1,7 @@
 import torch
 from torchvision import datasets, transforms
-from torchlight import config
-from torchlight.entry import run
+from torchlight.trainer import config
+from torchlight.trainer.entry import run
 
 from module import NetModule
 

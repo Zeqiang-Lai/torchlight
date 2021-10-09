@@ -9,7 +9,7 @@ from qqdm import qqdm
 from colorama import Fore, init
 import readchar
 
-from .logging.logger import Logger
+from ..logging.logger import Logger
 from .module import Module
 from ._util import Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner, text_divider, format_num
 
