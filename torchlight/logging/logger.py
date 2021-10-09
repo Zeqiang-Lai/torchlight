@@ -134,6 +134,7 @@ class TensorboardWriter():
             return a blank function handle that does nothing
         """
         if name in self.tb_writer_ftns:
+            # if enable is false, writer is None, then add_data would be none
             add_data = getattr(self.writer, name, None)
 
             def wrapper(tag, data, *args, **kwargs):

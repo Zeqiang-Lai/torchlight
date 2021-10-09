@@ -1,5 +1,4 @@
 import collections
-import operator
 from functools import reduce
 import ast
 import argparse
@@ -110,10 +109,12 @@ def read_config(configs):
 #                          Parse custom overried args                          #
 # ---------------------------------------------------------------------------- #
 
+def get_default(a:dict, b):
+    return a.get(b, {})
 
 def get_by_path(root, items):
     """Access a nested object in root by item sequence."""
-    return reduce(operator.getitem, items, root)
+    return reduce(get_default, items, root)
 
 
 def set_by_path(root, items, value):
@@ -143,12 +144,6 @@ def _set_custom_args(origin: dict, override: str):
         keys, value = tuple(_remove_whitespace(option.split('=')))
         keys = _remove_whitespace(keys.split('.'))
         value = _eval(value)
-
-        # check if types match
-        old_value = get_by_path(origin, keys)
-        assert type(old_value) == type(value),\
-            f'Types of custom arg and origin one not match. Old:{type(old_value)}({old_value}), New:{type(value)}({value})'
-
         set_by_path(origin, keys, value)
 
 # ---------------------------------------------------------------------------- #
