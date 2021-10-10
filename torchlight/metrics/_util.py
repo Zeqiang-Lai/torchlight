@@ -35,6 +35,6 @@ def enable_batch_input(reduce=True):
                 if reduce:
                     return sum(out) / len(out)
                 return out
-            return func(output, target)
+            return func(output, target, *args, **kwargs)
         return warpped
     return inner
