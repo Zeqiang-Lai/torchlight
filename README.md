@@ -13,6 +13,7 @@ pip install -e . # editable installation
 
 ## Features
 
+- Most modules are self-contained.
 - Debug Mode 
 - User friendly progress bar 
 - Save latest checkpoint if interrupted by Ctrl-C
