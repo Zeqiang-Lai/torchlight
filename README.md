@@ -91,7 +91,8 @@ if __name__ == '__main__':
     engine.train(train_loader, valid_loader=test_loader)
 ```
 
-## Related Project
+## Useful Tools
 
-- [kornia](https://github.com/kornia/kornia): Open Source Differentiable Computer Vision Library
-- [accelerate](https://github.com/huggingface/accelerate/): A simple way to train and use PyTorch models with multi-GPU, TPU, mixed-precision
+- [kornia](https://github.com/kornia/kornia): Open Source Differentiable Computer Vision Library.
+- [accelerate](https://github.com/huggingface/accelerate/): A simple way to train and use PyTorch models with multi-GPU, TPU, mixed-precision.
+- [einops](https://github.com/arogozhnikov/einops): Flexible and powerful tensor operations for readable and reliable code.
