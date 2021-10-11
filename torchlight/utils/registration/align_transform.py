@@ -55,7 +55,7 @@ class Align():
 
         return cv2.imread(path, mode)
 
-    def extract_SIFT(self, img):
+    def extract_SIFT(self, img, max_num_kp=10000):
         ''' EXTRACT_SIFT
 
             Extract SIFT descriptors from the given image.
@@ -77,7 +77,7 @@ class Align():
         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Extract key points and SIFT descriptors
-        sift = cv2.SIFT_create()
+        sift = cv2.SIFT_create(max_num_kp)
         kp, desc = sift.detectAndCompute(img_gray, None)
 
         # Extract positions of key points
@@ -85,7 +85,7 @@ class Align():
 
         return kp, desc
 
-    def match_SIFT(self, desc_s, desc_t):
+    def match_SIFT(self, desc_s, desc_t, k=10):
         ''' MATCH_SIFT
 
             Match SIFT descriptors of source image and target image.
@@ -105,7 +105,7 @@ class Align():
 
         # Match descriptor and obtain two best matches
         bf = cv2.BFMatcher()
-        matches = bf.knnMatch(desc_s, desc_t, k=2)
+        matches = bf.knnMatch(desc_s, desc_t, k=k)
 
         # Initialize output variable
         fit_pos = np.array([], dtype=np.int32).reshape((0, 2))
@@ -156,7 +156,7 @@ class Align():
 
         return M
 
-    def warp_image(self, source, target, M):
+    def warp_image(self, source, target, M,  *args, **kwargs):
         ''' WARP_IMAGE
 
             Warp the source image into target with the affine
@@ -169,7 +169,7 @@ class Align():
             - M : the affine transformation matrix
 
             Output:
-            
+
             - warp: warped source image
         '''
 
@@ -177,11 +177,11 @@ class Align():
         rows, cols, _ = target.shape
 
         # Warp the source image
-        warp = cv2.warpAffine(source, M, (cols, rows))
+        warp = cv2.warpAffine(source, M, (cols, rows), *args, **kwargs)
 
         return warp
 
-    def align_image(self, img_source, img_target):
+    def align_image(self, img_source, img_target, max_num_kp=10000, knn_k=10):
         ''' ALIGN_IMAGE
 
             Warp the source image into target image.
@@ -189,29 +189,30 @@ class Align():
             instance Align() is created.
 
             Input arguments:
-            
+
             - img_source(str, ndarray): the path or ndarry of sorce image that to be warped
             - img_target(str, ndarray): the path or ndarry of target image
-            
+            - max_num_kp: the max number of key points extracted by SIFT
+
             Output:
-            
+
             - warp: warped source image
-            
+
             Note: ndarray should be in cv2 format.
         '''
-        
+
         # Load source image and target image
         if isinstance(img_source, str):
             img_source = self.read_image(img_source)
             img_target = self.read_image(img_target)
-        
+
         # Extract key points and SIFT descriptors from
         # source image and target image respectively
-        kp_s, desc_s = self.extract_SIFT(img_source)
-        kp_t, desc_t = self.extract_SIFT(img_target)
+        kp_s, desc_s = self.extract_SIFT(img_source, max_num_kp=max_num_kp)
+        kp_t, desc_t = self.extract_SIFT(img_target, max_num_kp=max_num_kp)
 
         # Obtain the index of correcponding points
-        fit_pos = self.match_SIFT(desc_s, desc_t)
+        fit_pos = self.match_SIFT(desc_s, desc_t, k=knn_k)
 
         # Compute the affine transformation matrix
         M = self.affine_matrix(kp_s, kp_t, fit_pos)
@@ -219,4 +220,4 @@ class Align():
         # Warp the source image and display result
         warp = self.warp_image(img_source, img_target, M)
 
-        return warp
+        return warp, M
