@@ -63,21 +63,3 @@ class RandCrop:
         return img[..., x1:x1+self.cropx, y1:y1+self.cropy]
 
 
-def minmax_normalize(array):
-    amin = np.min(array)
-    amax = np.max(array)
-    return (array - amin) / (amax - amin)
-
-
-def crop_center(img, cropx, cropy):
-    x, y = img.shape[-2], img.shape[-1]
-    startx = x//2-(cropx//2)
-    starty = y//2-(cropy//2)
-    return img[..., startx:startx+cropx, starty:starty+cropy]
-
-
-def rand_crop(img, cropx, cropy):
-    x, y = img.shape[-2], img.shape[-1]
-    x1 = random.randint(0, x - cropx)
-    y1 = random.randint(0, y - cropy)
-    return img[..., x1:x1+cropx, y1:y1+cropy]
