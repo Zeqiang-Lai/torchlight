@@ -3,6 +3,8 @@ import numpy as np
 from .functional import hflip, vflip, brightness_change, multiplicative_color_change, contrast_change, rotate
 
 
+# assume channel first
+
 class Augment:
     def __call__(self, img):
         raise NotImplementedError
@@ -62,6 +64,7 @@ class Contrast(Augment):
         return contrast_change(img, self.alpha)
 
 
+# TODO: Fix
 class Rotate(Augment):
     def __init__(self):
         self.k = np.random.randint(0, 4)
