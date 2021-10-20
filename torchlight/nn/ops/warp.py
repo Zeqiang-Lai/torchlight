@@ -20,12 +20,15 @@ def flow_warp(x, flow, **kwargs):
     if x.is_cuda:
         grid = grid.cuda()
     vgrid = grid + flow
-    
+
     # scale grid to [-1,1]
     vgrid[:, 0, :, :] = 2.0 * vgrid[:, 0, :, :].clone() / max(W - 1, 1) - 1.0
     vgrid[:, 1, :, :] = 2.0 * vgrid[:, 1, :, :].clone() / max(H - 1, 1) - 1.0
 
     vgrid = vgrid.permute(0, 2, 3, 1)
+    
+    if 'align_corners' not in kwargs:
+        kwargs['align_corners'] = False
     output = F.grid_sample(x, vgrid, **kwargs)
 
     return output
