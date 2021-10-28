@@ -36,14 +36,14 @@ def top_k_acc(output, target, k=3):
 # B, C, H, W  | C, H, W
 
 
-@enable_batch_input()
 @torch2numpy
+@enable_batch_input()
 def psnr(output, target, data_range=1):
     return peak_signal_noise_ratio(target, output, data_range=data_range)
 
 
-@enable_batch_input()
 @torch2numpy
+@enable_batch_input()
 def ssim(img1, img2, **kwargs):
     # CHW -> HWC
     img1 = img1.transpose(1,2,0)
@@ -51,8 +51,8 @@ def ssim(img1, img2, **kwargs):
     return structural_similarity(img1, img2, multichannel=True, **kwargs)
 
 
-@enable_batch_input()
 @torch2numpy
+@enable_batch_input()
 def sam(img1, img2, eps=1e-8):
     tmp1 = np.sum(img1*img2, axis=0) + eps
     tmp2 = np.sqrt(np.sum(img1**2, axis=0)) + eps
@@ -61,15 +61,15 @@ def sam(img1, img2, eps=1e-8):
     return np.mean(np.real(np.arccos(tmp4)))
 
 
+@torch2numpy
 @enable_batch_input()
 @bandwise
-@torch2numpy
 def mpsnr(output, target, data_range=1):
     return peak_signal_noise_ratio(target, output, data_range=data_range)
 
 
+@torch2numpy
 @enable_batch_input()
 @bandwise
-@torch2numpy
 def mssim(img1, img2, **kwargs):
     return structural_similarity(img1, img2, **kwargs)

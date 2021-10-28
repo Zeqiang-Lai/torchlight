@@ -56,7 +56,8 @@ def basic_args(description=''):
         args.save_dir = args.new_save_dir
 
     if args.mode == 'train' and args.reset:
-        if action_confirm(Fore.RED + f'Do you really want to reset the old log?\nPath=({args.save_dir})'):
+        if os.path.exists(args.save_dir) and \
+            action_confirm(Fore.RED + f'Do you really want to reset the old log?\nPath=({args.save_dir})'):
             shutil.rmtree(args.save_dir)
     
     if args.mode == 'test':
