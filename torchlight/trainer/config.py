@@ -64,10 +64,13 @@ def basic_args(description=''):
         assert args.resume is not None, 'resume cannot be None in test mode'
 
     if args.resume:
-        resume_config_path = Path(args.resume_dir) / 'config.yaml'
-        cfg = read_yaml(resume_config_path)
-        if args.config:
-            deep_update(cfg, read_config(args.config))
+        if args.config and args.new_save_dir:
+            cfg = read_config(args.config)
+        else:
+            resume_config_path = Path(args.resume_dir) / 'config.yaml'
+            cfg = read_yaml(resume_config_path)
+            if args.config:
+                 deep_update(cfg, read_config(args.config))
     else:
         if args.config is None:
             print(Fore.RED + 'Warning: default config not founded, forgot to specify a configuration file?')
