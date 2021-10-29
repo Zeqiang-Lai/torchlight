@@ -14,9 +14,9 @@ def get_obj(info, module, *args, **kwargs):
     Finds a function handle with the name given as 'type@' in info, and returns the
     instance initialized with corresponding arguments given.
 
-    `object = get_obj('name', module, a, b=1)`
+    `object = get_obj(info['type@'], module)`
     is equivalent to
-    `object = module.name(a, b=1)`
+    `object = module.info['type@'](info.pop('type@'))`
     """
     module_name = info['type@']
     module_args = dict(info)

@@ -92,7 +92,8 @@ class GaussianDownsample(AbstractDownsample):
         self.downsampler = KFoldDownsample(sf)
 
 
-class Upsample:
+
+class Resize:
     """ Expect input'shape = [W,H,C]
     """
 
@@ -101,7 +102,7 @@ class Upsample:
         self.mode = self.mode_map[mode]
 
     def __call__(self, img):
-        return cv2.resize(img, (img.shape[1]*self.sf, img.shape[0]*self.sf), interpolation=self.mode)
+        return cv2.resize(img, (int(img.shape[1]*self.sf), int(img.shape[0]*self.sf)), interpolation=self.mode)
 
     mode_map = {
         'nearest': cv2.INTER_NEAREST,
@@ -110,6 +111,8 @@ class Upsample:
         'area': cv2.INTER_AREA
     }
 
+
+Upsample = Resize # backward capability
 
 class HSI2RGB(object):
     def __init__(self, spe=None):

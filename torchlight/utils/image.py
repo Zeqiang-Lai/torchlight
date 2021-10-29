@@ -34,6 +34,11 @@ def float2uint(img):
     return (img * 255).astype('uint8')
 
 
+def rgb2bgr(img):
+    """ input [H,W,C] """
+    return img[:, :, ::-1]
+
+
 def usm_sharp(img, weight=0.5, radius=50, threshold=10):
     """USM sharpening.
     Input image: I; Blurry image: B.
