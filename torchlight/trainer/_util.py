@@ -94,6 +94,7 @@ class Timer:
         minutes = used % 60
         used = used // 60
         hours = used
+        self._start_time = time.time()
         return "{}:{}:{}".format(hours, minutes, second)
 
 
