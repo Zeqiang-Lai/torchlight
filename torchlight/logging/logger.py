@@ -18,6 +18,7 @@ def setup_logging(save_dir, log_config=os.path.join(CURRENT_DIR, 'logger_config.
     Setup logging configuration
     """
     log_config = Path(log_config)
+    save_dir = Path(save_dir)
     if log_config.is_file():
         with log_config.open('rt') as handle:
             config = yaml.load(handle, Loader=yaml.FullLoader)
@@ -50,12 +51,12 @@ def get_logger(name, save_dir, verbosity=2):
 
 
 class Logger:
-    def __init__(self, log_dir: Path, enable_tensorboard=False):
-        self.log_dir = log_dir
+    def __init__(self, log_dir, enable_tensorboard=False):
+        self.log_dir = Path(log_dir)
         self.tensorboard_ = None
         self.enable_tensorboard = enable_tensorboard
-        self.text = get_logger('Torchlight', log_dir)
-        self.img_dir = log_dir / 'img'
+        self.text = get_logger('Torchlight', self.log_dir)
+        self.img_dir = self.log_dir / 'img'
 
     @property
     def tensorboard(self):
