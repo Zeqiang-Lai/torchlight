@@ -32,7 +32,7 @@ class AbstractBlur:
 
 
 class GaussianBlur(AbstractBlur):
-    """ Expect input'shape = [W,H,C]
+    """ Expect input'shape = [H,W,C]
     """
 
     def __init__(self, ksize=8, sigma=3):
@@ -40,7 +40,7 @@ class GaussianBlur(AbstractBlur):
 
 
 class UniformBlur(AbstractBlur):
-    """ Expect input'shape = [W,H,C]
+    """ Expect input'shape = [H,W,C]
     """
 
     def __init__(self, ksize):
@@ -53,14 +53,14 @@ class KFoldDownsample:
     ''' k-fold downsampler:
         Keeping the upper-left pixel for each distinct sfxsf patch and discarding the others
 
-        Expect input'shape = [W,H,C]
+        Expect input'shape = [H,W,C]
     '''
 
     def __init__(self, sf):
         self.sf = sf
 
     def __call__(self, img):
-        """ input: [w,h,c] """
+        """ input: [H,W,c] """
         st = 0
         return img[st::self.sf, st::self.sf, :]
 
@@ -73,7 +73,7 @@ class AbstractDownsample:
 
 
 class UniformDownsample(AbstractDownsample):
-    """ Expect input'shape = [W,H,C]
+    """ Expect input'shape = [H,W,C]
     """
 
     def __init__(self, sf):
@@ -83,7 +83,7 @@ class UniformDownsample(AbstractDownsample):
 
 
 class GaussianDownsample(AbstractDownsample):
-    """ Expect input'shape = [W,H,C]
+    """ Expect input'shape = [H,W,C]
     """
 
     def __init__(self, sf, ksize=8, sigma=3):
@@ -94,7 +94,7 @@ class GaussianDownsample(AbstractDownsample):
 
 
 class Resize:
-    """ Expect input'shape = [W,H,C]
+    """ Expect input'shape = [H,W,C]
     """
 
     def __init__(self, sf, mode='cubic'):
