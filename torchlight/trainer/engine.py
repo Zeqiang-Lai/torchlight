@@ -159,7 +159,6 @@ class Engine:
         :return: A log that contains average loss and met
         ric in this epoch.
         """
-        from torchvision.utils import make_grid
         
         metric_tracker = MetricTracker()
 
@@ -183,7 +182,7 @@ class Engine:
             if gstep % self.cfg.log_img_step == 0:
                 for name, img in results.imgs.items():
                     img_name = os.path.join('train', name, '{}_{}.png'.format(epoch, gstep))
-                    self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
+                    self.logger.save_img(img_name, img)
 
             pbar.set_postfix(self._format_nums(metric_tracker.result()))
             pbar.update()
@@ -204,7 +203,6 @@ class Engine:
         :return: A log that contains information about validation
         """
         import torch
-        from torchvision.utils import make_grid
         
         metric_tracker = MetricTracker()
 
@@ -228,7 +226,7 @@ class Engine:
                 if gstep % self.cfg.valid_log_img_step == 0:
                     for name, img in results.imgs.items():
                         img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
-                        self.logger.save_img(img_name, make_grid(img, nrow=8, normalize=True))
+                        self.logger.save_img(img_name, img)
 
                 pbar.set_postfix(self._format_nums(metric_tracker.result()))
                 pbar.update()
