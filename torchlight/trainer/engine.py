@@ -2,8 +2,7 @@ from typing import NamedTuple
 from pathlib import Path
 import os
 
-import torch
-from torchvision.utils import make_grid
+
 from tqdm import tqdm
 from qqdm import qqdm
 from colorama import Fore, init
@@ -160,6 +159,8 @@ class Engine:
         :return: A log that contains average loss and met
         ric in this epoch.
         """
+        from torchvision.utils import make_grid
+        
         metric_tracker = MetricTracker()
 
         len_epoch = len(train_loader)
@@ -202,6 +203,9 @@ class Engine:
         :param epoch: Integer, current training epoch.
         :return: A log that contains information about validation
         """
+        import torch
+        from torchvision.utils import make_grid
+        
         metric_tracker = MetricTracker()
 
         len_epoch = len(valid_loader)
@@ -213,6 +217,8 @@ class Engine:
             for batch_idx, data in enumerate(valid_loader):
                 gstep = (epoch - 1) * len_epoch + batch_idx + 1
                 results = self.module.step(data, train=False, epoch=epoch, step=gstep)
+
+                self.logger.debug(f'{batch_idx}: {results.metrics}')
 
                 self.logger.tensorboard.set_step(gstep, mode='valid')
                 for name, value in results.metrics.items():
@@ -240,6 +246,8 @@ class Engine:
         :param epoch: current epoch number
         :param save_best: if True, rename the saved checkpoint to 'model-best.pth'
         """
+        import torch
+        
         if postfix is None:
             postfix = f'epoch{epoch}'
         state = {
@@ -259,6 +267,8 @@ class Engine:
 
         :param resume_path: Checkpoint path to be resumed
         """
+        import torch
+        
         resume_path = str(resume_path)
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
         checkpoint = torch.load(resume_path)
