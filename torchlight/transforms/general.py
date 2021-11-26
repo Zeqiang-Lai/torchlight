@@ -1,7 +1,9 @@
-import numpy as np
 import random
 
+import numpy as np
+
 from ._util import LockedIterator
+from .functional import chw2hwc, hwc2chw
 
 
 class Compose:
@@ -63,3 +65,11 @@ class RandCrop:
         return img[..., x1:x1+self.cropx, y1:y1+self.cropy]
 
 
+class HWC2CHW:
+    def __call__(self, img):
+        return hwc2chw(img)
+
+
+class CHW2HWC:
+    def __call__(self, img):
+        return chw2hwc(img)
