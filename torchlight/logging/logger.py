@@ -7,8 +7,6 @@ import yaml
 import importlib 
 from datetime import datetime
 
-from torchvision.utils import save_image
-import colorlog
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,6 +17,7 @@ def setup_logging(save_dir, log_config=os.path.join(CURRENT_DIR, 'logger_config.
     """
     log_config = Path(log_config)
     save_dir = Path(save_dir)
+    save_dir.mkdir(exist_ok=True)
     if log_config.is_file():
         with log_config.open('rt') as handle:
             config = yaml.load(handle, Loader=yaml.FullLoader)
@@ -41,6 +40,7 @@ log_levels = {
 
 
 def get_logger(name, save_dir, verbosity=2):
+    import colorlog
     setup_logging(save_dir)
     msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(
         verbosity, log_levels.keys())
@@ -76,6 +76,8 @@ class Logger:
         self.text.warning(msg)
 
     def save_img(self, name, img):
+        # TODO: remove torchvision dependency
+        from torchvision.utils import save_image
         save_path: Path = self.img_dir / name
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
