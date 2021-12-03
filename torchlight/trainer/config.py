@@ -1,19 +1,20 @@
-import collections
-from functools import reduce
-import ast
 import argparse
-from pathlib import Path
+import ast
+import collections
 import json
-import yaml
-import sys
 import os
 import shutil
+from functools import reduce
+from pathlib import Path
 
+import yaml
+from colorama import Fore, init
 from munch import Munch
-from colorama import init, Fore
-init(autoreset=True)
 
 from ._util import action_confirm
+
+init(autoreset=True)
+
 
 def basic_args(description=''):
     """
@@ -47,7 +48,7 @@ def basic_args(description=''):
     args.add_argument('--override', default=None, type=str,
                       help='custom value to override the corrsponding key in config file.'
                       'format: "key.key=value; key2=value2", each KV pair must be seperate by a semicolon.')
-    args.add_argument('--reset', action='store_true', default=False, 
+    args.add_argument('--reset', action='store_true', default=False,
                       help='remove the old log dir if exists, only used in train mode')
     args = args.parse_args()
 
@@ -57,9 +58,9 @@ def basic_args(description=''):
 
     if args.mode == 'train' and args.reset:
         if os.path.exists(args.save_dir) and \
-            action_confirm(Fore.RED + f'Do you really want to reset the old log?\nPath=({args.save_dir})'):
+                action_confirm(Fore.RED + f'Do you really want to reset the old log?\nPath=({args.save_dir})'):
             shutil.rmtree(args.save_dir)
-    
+
     if args.mode == 'test':
         assert args.resume is not None, 'resume cannot be None in test mode'
 
@@ -70,18 +71,13 @@ def basic_args(description=''):
             resume_config_path = Path(args.resume_dir) / 'config.yaml'
             cfg = read_yaml(resume_config_path)
             if args.config:
-                 deep_update(cfg, read_config(args.config))
+                deep_update(cfg, read_config(args.config))
     else:
         if args.config is None:
             print(Fore.RED + 'Warning: default config not founded, forgot to specify a configuration file?')
             cfg = {'engine': {}}
         else:
             cfg = read_config(args.config)
-
-    os.makedirs(os.path.join(args.save_dir, 'history'), exist_ok=True)
-    with open(os.path.join(args.save_dir, 'history', 'cmd.log'), 'a') as f:
-        cmd = 'python ' + ' '.join(sys.argv) + '\n'
-        f.write(cmd)
 
     _set_custom_args(cfg, args.override)
 
@@ -104,7 +100,7 @@ def deep_update(source, overrides):
 
 def read_config(configs):
     cfg = {}
-    # the first must be full path, can omit extension, 
+    # the first must be full path, can omit extension,
     # the subseqeunt can use file name only
     base_dir = os.path.dirname(configs[0])
     for config in configs:
@@ -121,8 +117,10 @@ def read_config(configs):
 #                          Parse custom overried args                          #
 # ---------------------------------------------------------------------------- #
 
-def get_default(a:dict, b):
+
+def get_default(a: dict, b):
     return a.get(b, {})
+
 
 def get_by_path(root, items):
     """Access a nested object in root by item sequence."""
