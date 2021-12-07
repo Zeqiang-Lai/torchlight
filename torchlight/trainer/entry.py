@@ -3,12 +3,10 @@ from typing import Union
 import sys
 import datetime
 
-from torch.utils.data import DataLoader
-
 from .module import Module
 from .engine import Engine
 from .config import write_yaml
-from ._util import auto_rename
+from .util import auto_rename
 
 
 class DataSource:
@@ -67,11 +65,7 @@ def run_lazy(args, cfg, module: Module, data_source: DataSource):
     backup_cmd(cfg, save_dir=args.save_dir)
 
 
-def run(args, cfg,
-        module: Module,
-        train_loader: DataLoader,
-        valid_loader: DataLoader = None,
-        test_loader: Union[DataLoader, dict] = None):
+def run(args, cfg, module, train_loader, valid_loader = None, test_loader = None):
     """ test_loader can be a dict of Dataloaders in the format of {name: loader}
         ```python
         run(args, cfg, module, train_loader, valid_loader, test_loader)

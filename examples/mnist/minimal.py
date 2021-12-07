@@ -5,7 +5,7 @@ import torch
 from torchvision import datasets, transforms
 
 import torchlight
-from torchlight.metrics import accuracy
+from torchlight.metrics.torch import accuracy
 
 class Net(nn.Module):
     def __init__(self):

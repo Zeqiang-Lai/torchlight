@@ -1,12 +1,11 @@
 import torch
 from torchvision import datasets, transforms
-from torchlight.trainer import config
-from torchlight.trainer.entry import run
+import torchlight
 
 from module import NetModule
 
 if __name__ == '__main__':
-    args, cfg = config.basic_args('MNIST')
+    args, cfg = torchlight.basic_args('MNIST')
     
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(root='MNIST', train=True, download=True,
@@ -23,4 +22,4 @@ if __name__ == '__main__':
 
     module = NetModule(device=torch.device(args.device), **cfg['module'])
     
-    run(args, cfg, module, train_loader=train_loader, valid_loader=test_loader, test_loader=test_loader)
+    torchlight.run(args, cfg, module, train_loader=train_loader, valid_loader=test_loader, test_loader=test_loader)

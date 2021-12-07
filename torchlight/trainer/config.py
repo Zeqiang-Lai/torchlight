@@ -11,7 +11,7 @@ import yaml
 from colorama import Fore, init
 from munch import Munch
 
-from ._util import action_confirm
+from .util import action_confirm
 
 init(autoreset=True)
 
