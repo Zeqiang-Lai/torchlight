@@ -51,7 +51,7 @@ class EngineConfig(NamedTuple):
 
 class Engine:
     def __init__(self, module: Module, save_dir, **kwargs):
-        self.module = module
+        self.module = module.register_engine(self)
         self.experiment = Experiment(save_dir).create()
         self.cfg = EngineConfig(**kwargs)
         self.logger = Logger(self.experiment.log_dir, self.cfg.enable_tensorboard)
@@ -159,7 +159,7 @@ class Engine:
         :return: A log that contains average loss and met
         ric in this epoch.
         """
-        
+
         metric_tracker = MetricTracker()
 
         len_epoch = len(train_loader)
@@ -203,7 +203,7 @@ class Engine:
         :return: A log that contains information about validation
         """
         import torch
-        
+
         metric_tracker = MetricTracker()
 
         len_epoch = len(valid_loader)
@@ -245,7 +245,7 @@ class Engine:
         :param save_best: if True, rename the saved checkpoint to 'model-best.pth'
         """
         import torch
-        
+
         if postfix is None:
             postfix = f'epoch{epoch}'
         state = {
@@ -266,7 +266,7 @@ class Engine:
         :param resume_path: Checkpoint path to be resumed
         """
         import torch
-        
+
         resume_path = str(resume_path)
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
         checkpoint = torch.load(resume_path)

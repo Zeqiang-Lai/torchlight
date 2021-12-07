@@ -7,16 +7,31 @@ class Module(ABC):
         imgs: dict = {}
         metrics: dict = {}
 
+    def __init__(self):
+        super().__init__()
+        from .engine import Engine
+        self._engine: Engine = None
+
+    def register_engine(self, engine):
+        self._engine = engine
+        return self
+
+    @property
+    def engine(self):
+        if self._engine is None:
+            raise RuntimeError("Engine is not registered yet.")
+        return self._engine
+
+    @abstractmethod
+    
+    # ---------------------------------------------------------------------------- #
+    #         Abstract methods that must be implemented by the subclasses.         #
+    # ---------------------------------------------------------------------------- #
+
     @abstractmethod
     def step(self, data, train, epoch, step) -> StepResult:
         """ return a StepResult that contains the imgs and metrics you want to save and log """
         raise NotImplementedError
-
-    def on_epoch_start(self, train):
-        pass
-
-    def on_epoch_end(self, train):
-        pass
 
     @abstractmethod
     def state_dict(self):
@@ -25,6 +40,16 @@ class Module(ABC):
     @abstractmethod
     def load_state_dict(self, state):
         raise NotImplementedError
+
+    # ---------------------------------------------------------------------------- #
+    #                                Callback hooks                                #
+    # ---------------------------------------------------------------------------- #
+
+    def on_epoch_start(self, train):
+        pass
+
+    def on_epoch_end(self, train):
+        pass
 
 
 class SMSOModule(Module):
