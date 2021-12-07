@@ -1,68 +1,72 @@
+import importlib
 import logging
 import logging.config
+import logging.handlers
 import os
-from pathlib import Path
-import os
-import yaml
-import importlib 
 from datetime import datetime
+from pathlib import Path
 
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+class Handler:
+    @classmethod
+    def console(cls):
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)
 
+        import colorlog
+        formatter = colorlog.ColoredFormatter(fmt="%(log_color)s%(message)s",
+                                              log_colors={'WARNING': 'yellow', "ERROR": 'red'})
+        handler.setFormatter(formatter)
+        return handler
 
-def setup_logging(save_dir, log_config=os.path.join(CURRENT_DIR, 'logger_config.yaml'), default_level=logging.INFO):
-    """
-    Setup logging configuration
-    """
-    log_config = Path(log_config)
-    save_dir = Path(save_dir)
-    save_dir.mkdir(exist_ok=True)
-    if log_config.is_file():
-        with log_config.open('rt') as handle:
-            config = yaml.load(handle, Loader=yaml.FullLoader)
-        # modify logging paths based on run config
-        for _, handler in config['handlers'].items():
-            if 'filename' in handler:
-                handler['filename'] = str(save_dir / handler['filename'])
-
-        logging.config.dictConfig(config)
-    else:
-        print("Warning: logging configuration file is not found in {}.".format(log_config))
-        logging.basicConfig(level=default_level)
+    @classmethod
+    def file(cls, level, filename):
+        handler = logging.handlers.RotatingFileHandler(filename, maxBytes=10485760,
+                                                       backupCount=20, encoding='utf-8')
+        handler.setLevel(level)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        return handler
 
 
 log_levels = {
-    0: logging.WARNING,
-    1: logging.INFO,
-    2: logging.DEBUG
+    'warning': logging.WARNING,
+    'info': logging.INFO,
+    'debug': logging.DEBUG
 }
 
 
-def get_logger(name, save_dir, verbosity=2):
+def get_logger(name, save_dir, save2file, verbosity='debug'):
     import colorlog
-    setup_logging(save_dir)
+    save_dir = Path(save_dir)
+    save_dir.mkdir(exist_ok=True)
+
     msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(
         verbosity, log_levels.keys())
     assert verbosity in log_levels, msg_verbosity
+
     logger = colorlog.getLogger(name)
     logger.setLevel(log_levels[verbosity])
+    logger.addHandler(Handler.console())
+    if save2file:
+        logger.addHandler(Handler.file(logging.INFO, save_dir / 'info.log'))
+        logger.addHandler(Handler.file(logging.DEBUG, save_dir / 'debug.log'))
     return logger
 
 
 class Logger:
-    def __init__(self, log_dir, enable_tensorboard=False):
+    def __init__(self, log_dir, save2file=True, enable_tensorboard=False):
         self.log_dir = Path(log_dir)
         self.tensorboard_ = None
         self.enable_tensorboard = enable_tensorboard
-        self.text = get_logger('Torchlight', self.log_dir)
+        self.text = get_logger('Torchlight', self.log_dir, save2file)
         self.img_dir = self.log_dir / 'img'
 
     @property
     def tensorboard(self):
         if self.tensorboard_ is None:
             tensorboard_dir = os.path.join(self.log_dir, 'tensorboard')
-            self.tensorboard_ = TensorboardWriter(tensorboard_dir, logger=self, 
+            self.tensorboard_ = TensorboardWriter(tensorboard_dir, logger=self,
                                                   enabled=self.enable_tensorboard)
         return self.tensorboard_
 
@@ -84,7 +88,7 @@ class Logger:
         save_image(img, save_path)
 
 
-class TensorboardWriter():
+class TensorboardWriter:
     def __init__(self, log_dir, logger, enabled):
         self.writer = None
         self.selected_module = ""
