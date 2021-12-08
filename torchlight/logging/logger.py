@@ -7,28 +7,6 @@ from datetime import datetime
 from pathlib import Path
 
 
-class Handler:
-    @classmethod
-    def console(cls):
-        handler = logging.StreamHandler()
-        handler.setLevel(logging.INFO)
-
-        import colorlog
-        formatter = colorlog.ColoredFormatter(fmt="%(log_color)s%(message)s",
-                                              log_colors={'WARNING': 'yellow', "ERROR": 'red'})
-        handler.setFormatter(formatter)
-        return handler
-
-    @classmethod
-    def file(cls, level, filename):
-        handler = logging.handlers.RotatingFileHandler(filename, maxBytes=10485760,
-                                                       backupCount=20, encoding='utf-8')
-        handler.setLevel(level)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        return handler
-
-
 log_levels = {
     'warning': logging.WARNING,
     'info': logging.INFO,
@@ -36,30 +14,12 @@ log_levels = {
 }
 
 
-def get_logger(name, save_dir, save2file, verbosity='debug'):
-    import colorlog
-    save_dir = Path(save_dir)
-    save_dir.mkdir(exist_ok=True)
-
-    msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(
-        verbosity, log_levels.keys())
-    assert verbosity in log_levels, msg_verbosity
-
-    logger = colorlog.getLogger(name)
-    logger.setLevel(log_levels[verbosity])
-    logger.addHandler(Handler.console())
-    if save2file:
-        logger.addHandler(Handler.file(logging.INFO, save_dir / 'info.log'))
-        logger.addHandler(Handler.file(logging.DEBUG, save_dir / 'debug.log'))
-    return logger
-
-
 class Logger:
-    def __init__(self, log_dir, save2file=True, enable_tensorboard=False):
+    def __init__(self, log_dir, enable_tensorboard=False, handlers=['console', 'file'],):
         self.log_dir = Path(log_dir)
         self.tensorboard_ = None
         self.enable_tensorboard = enable_tensorboard
-        self.text = get_logger('Torchlight', self.log_dir, save2file)
+        self.text = TextLogger('Torchlight', self.log_dir, handlers)
         self.img_dir = self.log_dir / 'img'
 
     @property
@@ -86,6 +46,48 @@ class Logger:
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
         save_image(img, save_path)
+
+
+def TextLogger(name, save_dir, handlers=['console', 'file'], verbosity='debug'):
+    import colorlog
+    save_dir = Path(save_dir)
+    save_dir.mkdir(exist_ok=True)
+
+    msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(
+        verbosity, log_levels.keys())
+    assert verbosity in log_levels, msg_verbosity
+
+    logger = colorlog.getLogger(name)
+    logger.setLevel(log_levels[verbosity])
+
+    if 'console' in handlers:
+        logger.addHandler(Handler.console())
+    if 'file' in handlers:
+        logger.addHandler(Handler.file(logging.INFO, save_dir / 'info.log'))
+        logger.addHandler(Handler.file(logging.DEBUG, save_dir / 'debug.log'))
+    return logger
+
+
+class Handler:
+    @classmethod
+    def console(cls):
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)
+
+        import colorlog
+        formatter = colorlog.ColoredFormatter(fmt="%(log_color)s%(message)s",
+                                              log_colors={'WARNING': 'yellow', "ERROR": 'red'})
+        handler.setFormatter(formatter)
+        return handler
+
+    @classmethod
+    def file(cls, level, filename):
+        handler = logging.handlers.RotatingFileHandler(filename, maxBytes=10485760,
+                                                       backupCount=20, encoding='utf-8')
+        handler.setLevel(level)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        return handler
 
 
 class TensorboardWriter:
