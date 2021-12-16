@@ -15,7 +15,7 @@ def imread(path):
 def imwrite(img, path):
     """ a wrapper of imageio.imwrite 
     """
-    imageio.imwrite(img, path)
+    imageio.imwrite(path, img)
 
 
 def imshow(img):
