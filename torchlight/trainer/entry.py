@@ -34,10 +34,11 @@ def backup_cmd(cfg, save_dir):
  
 
 def run_lazy(args, cfg, module: Module, data_source: DataSource):
-    engine = Engine(module, save_dir=args.save_dir, **cfg['engine'])
+    cfg_engine = cfg.get('engine', {})
+    engine = Engine(module, save_dir=args.save_dir, **cfg_engine)
 
     if args.mode == 'train':
-        cfg['engine'].update(engine.cfg._asdict())
+        cfg_engine.update(engine.cfg._asdict())
         write_yaml(cfg, os.path.join(args.save_dir, 'config.yaml'))  # override the default config.yaml
 
         if args.resume:

@@ -22,8 +22,6 @@ class Module(ABC):
             raise RuntimeError("Engine is not registered yet.")
         return self._engine
 
-    @abstractmethod
-    
     # ---------------------------------------------------------------------------- #
     #         Abstract methods that must be implemented by the subclasses.         #
     # ---------------------------------------------------------------------------- #
