@@ -1,13 +1,13 @@
 import functools
 import numpy as np
 
-FORMAT_HWC = 'HWC'
-FORMAT_CHW = 'CHW'
+FORMAT_HWC = 'hwc'
+FORMAT_CHW = 'chw'
 DATA_FORMAT = FORMAT_HWC
 
 
 def set_data_format(format):
-    if format != FORMAT_HWC and format != FORMAT_CHW:
+    if format.lower() != FORMAT_HWC and format.lower() != FORMAT_CHW:
         raise ValueError('Invalid data format, choose from '
                          'torchlight.metrics.HWC or torchlight.metrics.CHW')
     global DATA_FORMAT
