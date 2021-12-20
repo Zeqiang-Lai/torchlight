@@ -2,7 +2,6 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.sampler import SubsetRandomSampler
-from torchvision import datasets, transforms
 
 
 class BaseDataLoader(DataLoader):
@@ -11,8 +10,16 @@ class BaseDataLoader(DataLoader):
     """
 
     def __init__(
-            self, dataset, batch_size, shuffle=True, validation_split=0, num_workers=4, collate_fn=default_collate, **
-            kwargs):
+        self,
+        dataset,
+        batch_size,
+        shuffle=True,
+        validation_split=0,
+        num_workers=4,
+        collate_fn=default_collate,
+        **kwargs
+    ):
+        print("Deprecate BaseDataLoader, use torch.utils.data.DataLoader instead")
         self.validation_split = validation_split
         self.shuffle = shuffle
 
@@ -22,13 +29,15 @@ class BaseDataLoader(DataLoader):
         self.sampler, self.valid_sampler = self._split_sampler(self.validation_split)
 
         self.init_kwargs = kwargs
-        self.init_kwargs.update({
-            'dataset': dataset,
-            'batch_size': batch_size,
-            'shuffle': self.shuffle,
-            'collate_fn': collate_fn,
-            'num_workers': num_workers
-        })
+        self.init_kwargs.update(
+            {
+                "dataset": dataset,
+                "batch_size": batch_size,
+                "shuffle": self.shuffle,
+                "collate_fn": collate_fn,
+                "num_workers": num_workers,
+            }
+        )
         super().__init__(sampler=self.sampler, **self.init_kwargs)
 
     def _split_sampler(self, split):
@@ -42,7 +51,9 @@ class BaseDataLoader(DataLoader):
 
         if isinstance(split, int):
             assert split > 0
-            assert split < self.n_samples, "validation set size is configured to be larger than entire dataset."
+            assert (
+                split < self.n_samples
+            ), "validation set size is configured to be larger than entire dataset."
             len_valid = split
         else:
             len_valid = int(self.n_samples * split)
