@@ -225,7 +225,11 @@ class Engine:
 
                 if gstep % self.cfg.valid_log_img_step == 0:
                     for name, img in results.imgs.items():
-                        img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
+                        if isinstance(img, tuple):
+                            img, filename = img
+                            img_name = os.path.join('valid', name, f'{filename}.png')
+                        else:
+                            img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                         self.logger.save_img(img_name, img)
 
                 pbar.set_postfix(self._format_nums(metric_tracker.result()))
