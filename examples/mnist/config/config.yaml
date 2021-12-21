@@ -1,10 +1,9 @@
 engine:
-  max_epochs: 1
+  max_epochs: 5
   log_img_step: 100
   enable_early_stop: True
   early_stop_threshold: 0.1
-  mnt_metric: val_accuracy
-  mnt_mode: max
+  mnt: max val_accuracy
 
 
 module:

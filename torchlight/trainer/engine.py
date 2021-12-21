@@ -37,8 +37,7 @@ class EngineConfig(NamedTuple):
     save_per_epoch: int = 1
     valid_per_epoch: int = 1
 
-    mnt_mode: str = 'min'
-    mnt_metric: str = 'loss'
+    mnt: str = 'min loss'
     enable_early_stop: bool = False
     early_stop_threshold: float = 0.01
     early_stop_count: int = 5
@@ -47,6 +46,14 @@ class EngineConfig(NamedTuple):
     num_fmt: str = '{:8.5g}'
     ckpt_save_mode: str = 'all'
     enable_tensorboard: bool = False
+
+    @property
+    def mnt_mode(self):
+        return self.mnt.split(' ')[0]
+
+    @property
+    def mnt_metric(self):
+        return self.mnt.split(' ')[1]
 
 
 class Engine:
