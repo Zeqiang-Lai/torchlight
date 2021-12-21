@@ -64,7 +64,8 @@ class SMSOModule(Module):
             self.optimizer.zero_grad()
 
         loss, result = self._step(data, train, epoch, step)
-
+        result.metrics['loss'] = loss.item()
+        
         if train:
             loss.backward()
             self.optimizer.step()
