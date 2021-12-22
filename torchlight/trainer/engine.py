@@ -37,8 +37,7 @@ class EngineConfig(NamedTuple):
     save_per_epoch: int = 1
     valid_per_epoch: int = 1
 
-    mnt_mode: str = 'min'
-    mnt_metric: str = 'loss'
+    mnt: str = 'min loss'
     enable_early_stop: bool = False
     early_stop_threshold: float = 0.01
     early_stop_count: int = 5
@@ -47,6 +46,14 @@ class EngineConfig(NamedTuple):
     num_fmt: str = '{:8.5g}'
     ckpt_save_mode: str = 'all'
     enable_tensorboard: bool = False
+
+    @property
+    def mnt_mode(self):
+        return self.mnt.split(' ')[0]
+
+    @property
+    def mnt_metric(self):
+        return self.mnt.split(' ')[1]
 
 
 class Engine:
@@ -225,7 +232,11 @@ class Engine:
 
                 if gstep % self.cfg.valid_log_img_step == 0:
                     for name, img in results.imgs.items():
-                        img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
+                        if isinstance(img, tuple):
+                            img, filename = img
+                            img_name = os.path.join('valid', name, f'{filename}.png')
+                        else:
+                            img_name = os.path.join('valid', name, '{}_{}.png'.format(epoch, gstep))
                         self.logger.save_img(img_name, img)
 
                 pbar.set_postfix(self._format_nums(metric_tracker.result()))
