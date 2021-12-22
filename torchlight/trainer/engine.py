@@ -252,7 +252,6 @@ class Engine:
             'epoch': epoch,
             'module': self.module.state_dict(),
             'monitor': self.monitor.state_dict() if self.cfg.mnt_mode != 'off' else None,
-            'config': self.cfg
         }
         filename = str(self.experiment.ckpt_dir / f'model-{postfix}.pth')
         torch.save(state, filename)
