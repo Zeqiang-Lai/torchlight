@@ -280,13 +280,17 @@ class Engine:
         resume_path = str(resume_path)
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
         checkpoint = torch.load(resume_path)
-        self.start_epoch = checkpoint['epoch'] + 1
+        
+        if 'epoch' in checkpoint:
+            self.start_epoch = checkpoint['epoch'] + 1
+        else:
+            self.logger.warning("Epoch not found, default value (1) will be used.")
         self.epoch = self.start_epoch
 
         if 'monitor' in checkpoint:
             self.monitor.load_state_dict(checkpoint['monitor'])
         else:
-            self.logger.info("Monitor state dict not found, default value will be used.")
+            self.logger.warning("Monitor state dict not found, default value will be used.")
 
         self.module.load_state_dict(checkpoint['module'])
 

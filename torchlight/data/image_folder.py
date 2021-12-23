@@ -12,6 +12,7 @@ IMG_EXTENSIONS = [
     ".bmp",
     ".BMP",
     ".tiff",
+    '.tif'
 ]
 
 
