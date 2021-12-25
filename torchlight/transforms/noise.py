@@ -14,7 +14,9 @@ class GaussianNoise(object):
 
 
 class GaussianNoiseBlind(object):
-    """add blind gaussian noise to the given numpy array (B,H,W)"""
+    """ add blind gaussian noise to the given numpy array (B,H,W)
+        where noise level is randomly selected from sigmas
+    """
 
     def __pos(self, n):
         i = 0
@@ -23,7 +25,7 @@ class GaussianNoiseBlind(object):
             i = (i + 1) % n
 
     def __init__(self, sigmas):
-        self.sigmas = np.array(sigmas) / 255.
+        self.sigmas = np.array(sigmas)
         self.pos = LockedIterator(self.__pos(len(sigmas)))
 
     def __call__(self, img):
@@ -31,8 +33,10 @@ class GaussianNoiseBlind(object):
         return img + noise
 
 
-class GaussianNoiseBlindv2(object):
-    """add blind gaussian noise to the given numpy array (B,H,W)"""
+class GaussianNoiseRandom(object):
+    """ add random gaussian noise to the given numpy array (B,H,W)
+        where noise level is uniformly distributed between min_sigma and max_sigma
+    """
 
     def __init__(self, min_sigma, max_sigma):
         self.min_sigma = min_sigma
@@ -40,7 +44,7 @@ class GaussianNoiseBlindv2(object):
 
     def __call__(self, img):
         noise = np.random.randn(
-            *img.shape) * np.random.uniform(self.min_sigma, self.max_sigma) / 255
+            *img.shape) * np.random.uniform(self.min_sigma, self.max_sigma)
         return img + noise
 
 
@@ -48,7 +52,7 @@ class GaussianNoiseNoniid(object):
     """add non-iid gaussian noise to the given numpy array (B,H,W)"""
 
     def __init__(self, sigmas):
-        self.sigmas = np.array(sigmas) / 255.
+        self.sigmas = np.array(sigmas)
 
     def __call__(self, img):
         bwsigmas = np.reshape(self.sigmas[np.random.randint(
