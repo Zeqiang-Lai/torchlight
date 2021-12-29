@@ -1,1 +1,5 @@
 myst-parser
+sphinx-rtd-theme
+furo
+sphinx-copybutton
+sphinx-inline-tabs
