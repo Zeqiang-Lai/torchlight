@@ -40,12 +40,12 @@ class Logger:
         self.text.warning(msg)
 
     def save_img(self, name, img):
-        # TODO: remove torchvision dependency
-        from torchvision.utils import save_image
         save_path: Path = self.img_dir / name
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
+        from .visualization import save_image
         save_image(img, save_path)
+
 
 
 def TextLogger(name, save_dir, handlers=['console', 'file'], verbosity='debug'):

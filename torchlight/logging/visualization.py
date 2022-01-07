@@ -27,3 +27,15 @@ def img2fft(img: Union[torch.Tensor, np.ndarray]):
         return img2fft_np(img)
     else:
         raise ValueError('unsupported data type ' + str(type(img)))
+
+
+def save_image(img, save_path):
+    # TODO: remove torchvision dependency
+    from torchvision.utils import save_image
+
+    def convert(img):
+        if isinstance(img, list):
+            return [convert(x) for x in img]
+        return torch.from_numpy(img)
+    
+    save_image(convert(img), save_path)
