@@ -7,7 +7,7 @@ from tqdm import tqdm
 from qqdm import qqdm
 from colorama import Fore, init
 
-from ..logging.logger import Logger
+from torchlight.logging.logger import Logger
 from .module import Module
 from .util import Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner, text_divider, format_num, action_confirm
 

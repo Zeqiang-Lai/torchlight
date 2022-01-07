@@ -1,4 +1,3 @@
-import cv2
 import imageio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -52,6 +51,7 @@ def usm_sharp(img, weight=0.5, radius=50, threshold=10):
         radius (float): Kernel size of Gaussian blur. Default: 50.
         threshold (int):
     """
+    import cv2
     if radius % 2 == 0:
         radius += 1
     blur = cv2.GaussianBlur(img, (radius, radius), 0)
