@@ -36,6 +36,8 @@ def save_image(img, save_path):
     def convert(img):
         if isinstance(img, list):
             return [convert(x) for x in img]
-        return torch.from_numpy(img)
+        if isinstance(img, np.ndarray):
+            return torch.from_numpy(img)
+        return img
     
     save_image(convert(img), save_path)

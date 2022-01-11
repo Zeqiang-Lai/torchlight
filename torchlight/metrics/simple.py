@@ -24,7 +24,7 @@ def psnr(output, target, data_range=1):
 @enable_batch_input()
 @CHW2HWC
 def ssim(img1, img2, **kwargs):
-    return structural_similarity(img1, img2, multichannel=True, **kwargs)
+    return structural_similarity(img1, img2, channel_axis=2, **kwargs)
 
 
 @torch2numpy

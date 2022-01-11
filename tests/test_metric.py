@@ -13,7 +13,7 @@ img2 = img1+noise
 img2 = img2.clip(0, 1)
 
 gt_psnr = peak_signal_noise_ratio(img1, img2)
-gt_ssim = structural_similarity(img1, img2, multichannel=True)
+gt_ssim = structural_similarity(img1, img2, channel_axis=2)
 
 gt_mpsnr = 0
 for i in range(3):
