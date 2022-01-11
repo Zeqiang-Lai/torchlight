@@ -1,6 +1,6 @@
 import numpy as np
 import random
-
+import cv2
 
 def minmax_normalize(array):
     amin = np.min(array)
@@ -28,6 +28,15 @@ def mod_crop(img, modulo):
     h = h - (h % modulo)
     img = img[0:h, 0:w, :]
     return img
+
+
+def mod_resize(img, base, mode=cv2.INTER_CUBIC):
+    ow, oh, _ = img.shape
+    h = int(round(oh / base) * base)
+    w = int(round(ow / base) * base)
+    if (h == oh) and (w == ow):
+        return img
+    return cv2.resize(img, (w, h), interpolation=mode)
 
 
 def hwc2chw(img):
