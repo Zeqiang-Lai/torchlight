@@ -8,25 +8,25 @@ def minmax_normalize(array):
     return (array - amin) / (amax - amin)
 
 
-def crop_center(img, cropx, cropy):
-    x, y = img.shape[-2], img.shape[-1]
-    startx = x//2-(cropx//2)
-    starty = y//2-(cropy//2)
-    return img[..., startx:startx+cropx, starty:starty+cropy]
+def crop_center(img, croph, cropw):
+    h, w, _ = img.shape
+    starth = h//2-(croph//2)
+    startw = w//2-(cropw//2)
+    return img[starth:starth+croph, startw:startw+cropw, :]
 
 
-def rand_crop(img, cropx, cropy):
-    x, y = img.shape[-2], img.shape[-1]
-    x1 = random.randint(0, x - cropx)
-    y1 = random.randint(0, y - cropy)
-    return img[..., x1:x1+cropx, y1:y1+cropy]
+def rand_crop(img, croph, cropw):
+    h, w, _ = img.shape
+    h1 = random.randint(0, h - croph)
+    w1 = random.randint(0, w - cropw)
+    return img[h1:h1+croph, w1:w1+cropw, :]
 
 
 def mod_crop(img, modulo):
-    _, ih, iw = img.shape
-    ih = ih - (ih % modulo)
-    iw = iw - (iw % modulo)
-    img = img[:, 0:ih, 0:iw]
+    h, w, _ = img.shape
+    h = h - (h % modulo)
+    h = h - (h % modulo)
+    img = img[0:h, 0:w, :]
     return img
 
 
@@ -36,3 +36,40 @@ def hwc2chw(img):
 
 def chw2hwc(img):
     return img.transpose(1, 2, 0)
+
+
+def vflip(img):
+    return img[::-1, :, :]
+
+
+def hflip(img):
+    return img[:, ::-1, :]
+
+
+def brightness_change(img, strength):
+    return img + strength
+
+
+def multiplicative_color_change(img, strength):
+    return img * strength
+
+
+def grayscale(img):
+    dst = np.zeros((img.shape[0], img.shape[1], 1), dtype=np.float32)
+    dst[:, :, 0] = 0.299 * img[:, :, 0] + 0.587 * img[:, :, 1] + 0.114 * img[:, :, 2]
+    dst = np.repeat(dst, 3, axis=2)
+    return dst
+
+
+def blend(img1, img2, alpha=0.5):
+    return img1 * alpha + img2 * (1-alpha)
+
+
+def contrast_change(img, alpha):
+    gs_2 = grayscale(img)
+    img = blend(gs_2, img, alpha=alpha)
+    return img
+
+
+def rotate(img, k):
+    return np.rot90(img, k)

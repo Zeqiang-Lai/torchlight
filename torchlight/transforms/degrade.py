@@ -1,12 +1,10 @@
 import os
 
-import numpy as np
-from scipy import ndimage
-import scipy
 import cv2
+import numpy as np
+import scipy
+from scipy import ndimage
 from scipy.io import loadmat
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def fspecial_gaussian(hsize, sigma):
@@ -92,7 +90,6 @@ class GaussianDownsample(AbstractDownsample):
         self.downsampler = KFoldDownsample(sf)
 
 
-
 class Resize:
     """ Expect input'shape = [H,W,C]
     """
@@ -112,15 +109,16 @@ class Resize:
     }
 
 
-Upsample = Resize # backward capability
+Upsample = Resize  # backward capability
+
 
 class HSI2RGB(object):
-    def __init__(self, spe=None):
-        if spe is None:
+    def __init__(self, srf=None):
+        if srf is None:
             CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-            self.SPE = loadmat(os.path.join(CURRENT_DIR, 'kernels', 'misr_spe_p.mat'))['P']  # (3,31)
+            self.srf = loadmat(os.path.join(CURRENT_DIR, 'kernels', 'misr_spe_p.mat'))['P']  # (3,31)
         else:
-            self.SPE = spe
+            self.srf = srf
 
     def __call__(self, img):
-        return img @ self.SPE.transpose()
+        return img @ self.srf.transpose()

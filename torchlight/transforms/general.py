@@ -17,7 +17,7 @@ class Compose:
         return out
 
 
-class SequentialSelect(object):
+class SequentialSelect:
     def __pos(self, n):
         i = 0
         while True:

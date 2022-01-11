@@ -1,13 +1,116 @@
 import random
+import abc
+import numpy as np
+from . import functional as F
 
-class RandCrop:
-    def __init__(self, img_size, crop_size):
-        self.cropx = crop_size[0]
-        self.cropy = crop_size[1]
-        x, y = img_size[0], img_size[1]
-        self.x1 = random.randint(0, x - self.cropx)
-        self.y1 = random.randint(0, y - self.cropy)
-        
+__ALL__ = [
+    'RandCrop',
+    'FlipHorizontal',
+    'FlipVertical',
+    'BrightnessChange',
+    'MultiplicativeColorChange',
+    'Contrast',
+    'Rotate',
+]
+
+
+class StatefulTransform(abc.ABC):
+    """ A StatefulTransform transform each image with identical state 
+        after initilization.  
+    """
+
+    def __init__(self):
+        self.state = None
+
     def __call__(self, img):
-        return img[..., self.x1:self.x1+self.cropx, self.y1:self.y1+self.cropy]
+        if self.state is None:
+            self.state = self.get_state(img)
+        if isinstance(self.state, tuple):
+            return self.apply(img, *self.state)
+        else:
+            return self.apply(img, self.state)
 
+    @abc.abstractmethod
+    def get_state(self, img):
+        pass
+
+    @abc.abstractmethod
+    def apply(self, img, state):
+        pass
+
+
+class RandCrop(StatefulTransform):
+    """ Assume [H,W,C] format """
+
+    def __init__(self, crop_size):
+        super().__init__()
+        self.croph = crop_size[0]
+        self.cropw = crop_size[1]
+
+    def get_state(self, img):
+        h, w = img.shape[0], img.shape[1]
+        sh = random.randint(0, h - self.croph)  # start height
+        sw = random.randint(0, w - self.cropw)  # start width
+        return sh, sw
+
+    def apply(self, img, sh, sw):
+        return img[sh:sh+self.croph, sw:sw+self.cropw, :]
+
+
+class FlipHorizontal(StatefulTransform):
+    def get_state(self, img):
+        enable = np.random.randint(0, 2) > 0.5
+        return enable
+
+    def apply(self, img, enable):
+        if enable:
+            return F.hflip(img)
+        return img
+
+
+class FlipVertical(StatefulTransform):
+    def get_state(self, img):
+        enable = np.random.randint(0, 2) > 0.5
+        return enable
+
+    def apply(self, img, enable):
+        if enable:
+            return F.vflip(img)
+        return img
+
+
+class BrightnessChange(StatefulTransform):
+    def get_state(self, img):
+        strength = np.random.normal(loc=0, scale=0.02)
+        return strength
+
+    def apply(self, img, strength):
+        return F.brightness_change(img, strength)
+
+
+class MultiplicativeColorChange(StatefulTransform):
+    def get_state(self, img):
+        strength = np.random.uniform(0.9, 1.1)
+        return strength
+
+    def apply(self, img, strength):
+        return F.multiplicative_color_change(img, strength)
+
+
+class Contrast(StatefulTransform):
+    def get_state(self, img):
+        alpha = np.random.uniform(-0.3, 0.3)
+        return alpha
+
+    def apply(self, img, alpha):
+        return F.contrast_change(img, alpha)
+
+
+# TODO: Fix
+class Rotate(StatefulTransform):
+    def get_state(self, img):
+        k = np.random.randint(0, 4)
+        return k
+
+    def apply(self, img, k):
+        return F.rotate(img, k)
