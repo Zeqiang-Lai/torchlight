@@ -34,3 +34,4 @@ def find_all_images(dir):
                 images.append(path)
 
     return images
+
