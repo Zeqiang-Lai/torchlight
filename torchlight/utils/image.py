@@ -1,24 +1,77 @@
-import imageio
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.misc
 
 
-def imread(path):
-    """ a wrapper of imageio.imread, which removes the meta data.
+class example:
+    gray = scipy.misc.ascent()
+    color = scipy.misc.face()
+
+
+def imread_uint(path, mode):
+    """ Read image from path.
+        Args:
+            path: Path of image.
+            mode: Which way you would like to load image. Defaults to 'keep'.
+                  choose from ['keep', 'color', 'gray'].
+
+        Note:
+            - keep: keep image original format, color `HW3`, gray `HW1`
+            - color: convert gray image to `HW3` by repeating channel dim
+            - gray: read color image as gray, all image `HW1`
     """
-    img = imageio.imread(path)
-    img = np.array(img)
+    if mode not in ['keep', 'color', 'gray']:
+        raise ValueError('mode should be one of [keep, color, gray]')
+
+    import cv2
+    import numpy as np
+
+    if mode == 'keep':
+        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+        if img.ndim == 2:
+            return np.expand_dims(img, axis=2)  # HW -> HW1
+        return img[:, :, :3]  # remove alpha channel if exists
+
+    if mode == 'color':
+        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)  # BGR or G
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)  # GGG
+        else:
+            img = cv2.cvtColor(img[:, :, :3], cv2.COLOR_BGR2RGB)  # RGB
+        return img
+
+    if mode == 'gray':
+        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        img = np.expand_dims(img, axis=2)  # HW -> HW1
+        return img
+
+
+def imread_float(path, mode):
+    img = imread_uint(path, mode)
+    img = uint2float(img)
     return img
 
 
-def imwrite(img, path):
-    """ a wrapper of imageio.imwrite 
+def imsave(path, img):
+    """ Save image or list of images to path. 
+        - Assume value ranges from float [0,1], or uint8 [0,255], in RGB format.
+        - list of images will be stacked horizontally.
+
+        Internally call `cv2.imwrite`.
     """
-    imageio.imwrite(path, img)
+    import cv2
+    if isinstance(img, list):
+        img = np.hstack(img)
+    if img.dtype == np.float32 or img.dtype == np.float64:
+        img = np.clip(img, 0, 1)
+        img = (img * 255).astype('uint8')
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(path, img)
 
 
 def imshow(img):
     plt.imshow(img)
+    plt.show()
 
 
 def hwc2chw(img):
@@ -26,7 +79,7 @@ def hwc2chw(img):
 
 
 def uint2float(img):
-    return img.astype('float') / 255
+    return img.astype('float32') / 255
 
 
 def float2uint(img):
