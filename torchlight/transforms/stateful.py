@@ -1,6 +1,9 @@
-import random
 import abc
+import random
+from typing import List
+
 import numpy as np
+
 from . import functional as F
 
 __ALL__ = [
@@ -30,6 +33,9 @@ class StatefulTransform(abc.ABC):
         else:
             return self.apply(img, self.state)
 
+    def reset(self):
+        self.state = None
+
     @abc.abstractmethod
     def get_state(self, img):
         pass
@@ -37,6 +43,25 @@ class StatefulTransform(abc.ABC):
     @abc.abstractmethod
     def apply(self, img, state):
         pass
+
+
+class Compose(StatefulTransform):
+    def __init__(self, transforms: List[StatefulTransform]):
+        super().__init__()
+        self.transforms = transforms
+
+    def get_state(self, img):
+        return None
+
+    def apply(self, img, state):
+        out = img
+        for transform in self.transforms:
+            out = transform(out)
+        return out
+    
+    def reset(self):
+        for transform in self.transforms:
+            transform.reset()
 
 
 class RandCrop(StatefulTransform):
