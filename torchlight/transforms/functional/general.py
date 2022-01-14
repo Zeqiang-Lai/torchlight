@@ -1,11 +1,21 @@
 import numpy as np
 import random
 import cv2
+from typing import List
+
 
 def minmax_normalize(array):
     amin = np.min(array)
     amax = np.max(array)
     return (array - amin) / (amax - amin)
+
+
+def normalize(img: np.ndarray, mean: List[float], std: List[float]):
+    mean = np.array(mean, dtype=np.float32)
+    std = np.array(std, dtype=np.float32)
+    mean = mean.reshape((1, 1, -1))
+    std = std.reshape((1, 1, -1))
+    return (img - mean) / std
 
 
 def crop_center(img, croph, cropw):
@@ -25,7 +35,7 @@ def rand_crop(img, croph, cropw):
 def mod_crop(img, modulo):
     h, w, _ = img.shape
     h = h - (h % modulo)
-    h = h - (h % modulo)
+    w = w - (w % modulo)
     img = img[0:h, 0:w, :]
     return img
 
