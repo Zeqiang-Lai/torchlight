@@ -9,9 +9,9 @@ hide-toc: true
 :maxdepth: 3
 :hidden: true
 
-modules/logging
-modules/transforms
 getstart
+modules/index
+example
 ```
 
 
