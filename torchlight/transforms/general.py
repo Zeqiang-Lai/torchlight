@@ -4,7 +4,7 @@ import numpy as np
 
 from ._util import LockedIterator
 from .functional import chw2hwc, hwc2chw
-
+from .functional import hwc2chw, chw2hwc
 
 class Compose:
     def __init__(self, transforms):
@@ -73,3 +73,29 @@ class HWC2CHW:
 class CHW2HWC:
     def __call__(self, img):
         return chw2hwc(img)
+
+
+class MinSize:
+    def __init__(self, size: int, keep_ratio=True):
+        self.size = size
+        self.keep_ratio = keep_ratio
+
+    def __call__(self, img):
+        import cv2
+        x, y = img.shape[0], img.shape[1]
+        if x > self.size and y > self.size:
+            return img
+        
+        if self.keep_ratio:
+            if x > y:
+                y2 = self.size
+                x2 = int(self.size * x / y)
+            else:
+                x2 = self.size
+                y2 = int(self.size * y / x)
+        else:
+            x2, y2 = self.size, self.size
+        
+        return cv2.resize(img, (y2, x2), interpolation=cv2.INTER_CUBIC)
+                
+        
