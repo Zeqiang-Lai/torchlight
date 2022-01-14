@@ -46,7 +46,7 @@ class StatefulTransform(abc.ABC):
 
 
 class Compose(StatefulTransform):
-    def __init__(self, transforms: List[StatefulTransform]):
+    def __init__(self, transforms: List):
         super().__init__()
         self.transforms = transforms
 
@@ -61,7 +61,8 @@ class Compose(StatefulTransform):
     
     def reset(self):
         for transform in self.transforms:
-            transform.reset()
+            if isinstance(transform, StatefulTransform):
+                transform.reset()
 
 
 class RandCrop(StatefulTransform):

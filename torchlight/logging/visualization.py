@@ -40,4 +40,4 @@ def save_image(img, save_path):
             return torch.from_numpy(img)
         return img
     
-    save_image(convert(img), save_path)
+    save_image(convert(img), save_path, normalize=True)
