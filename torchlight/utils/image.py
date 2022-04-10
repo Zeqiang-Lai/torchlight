@@ -78,6 +78,10 @@ def hwc2chw(img):
     return img.transpose(2, 0, 1)
 
 
+def chw2hwc(img):
+    return img.transpose(1, 2, 0)
+
+
 def uint2float(img):
     return img.astype('float32') / 255
 

@@ -5,11 +5,20 @@ from ._util import LockedIterator
 
 
 class GaussianNoise(object):
-    def __init__(self, sigma):
+    def __init__(self, sigma, clip=None):
+        """ Add Gaussian noise to provided image
+
+        Args:
+            sigma: Gaussian noise level, can be in range of [0,1] or [0,255]
+            clip (optional): whether clip, can be 1, 255, or None. Defaults to None.
+        """
         self.sigma = sigma
+        self.clip = clip
 
     def __call__(self, img):
         img_L = img + np.random.normal(0, self.sigma, img.shape).astype(img.dtype)
+        if self.clip:
+            img_L = img_L.clip(0, self.clip)
         return img_L
 
 

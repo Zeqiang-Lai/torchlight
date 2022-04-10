@@ -47,10 +47,10 @@ class CenterCrop:
         self.cropy = size[1]
 
     def __call__(self, img):
-        x, y = img.shape[-2], img.shape[-1]
+        x, y = img.shape[0], img.shape[1]
         startx = x//2-(self.cropx//2)
         starty = y//2-(self.cropy//2)
-        return img[..., startx:startx+self.cropx, starty:starty+self.cropy]
+        return img[startx:startx+self.cropx, starty:starty+self.cropy, ...]
 
 
 class RandCrop:
@@ -59,10 +59,10 @@ class RandCrop:
         self.cropy = size[1]
 
     def __call__(self, img):
-        x, y = img.shape[-2], img.shape[-1]
+        x, y = img.shape[0], img.shape[1]
         x1 = random.randint(0, x - self.cropx)
         y1 = random.randint(0, y - self.cropy)
-        return img[..., x1:x1+self.cropx, y1:y1+self.cropy]
+        return img[x1:x1+self.cropx, y1:y1+self.cropy, ...]
 
 
 class HWC2CHW:
