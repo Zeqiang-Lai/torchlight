@@ -167,12 +167,12 @@ class Engine:
         ric in this epoch.
         """
 
+        self.module.on_epoch_start(train=True)
+        
         metric_tracker = MetricTracker()
-
         len_epoch = len(train_loader)
         pbar = self._progress_bar(total=len_epoch)
         pbar.set_description('Train [{}|{}]'.format(epoch, self.cfg.max_epochs))
-        self.module.on_epoch_start(train=True)
         for batch_idx, data in enumerate(train_loader):
             gstep = (epoch - 1) * len_epoch + batch_idx + 1
             results = self.module.step(data, train=True, epoch=epoch, step=gstep)

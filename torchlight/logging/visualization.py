@@ -37,7 +37,7 @@ def save_image(img, save_path):
         if isinstance(img, list):
             return [convert(x) for x in img]
         if isinstance(img, np.ndarray):
-            return torch.from_numpy(img)
+            return torch.from_numpy(img).permute(2, 0, 1)
         return img
     
     save_image(convert(img), save_path, normalize=True)

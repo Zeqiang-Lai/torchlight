@@ -25,7 +25,7 @@ def fspecial_gaussian(hsize, sigma):
 class AbstractBlur:
     def __call__(self, img):
         img_L = ndimage.filters.convolve(
-            img, np.expand_dims(self.kernel, axis=2), mode='nearest')
+            img, np.expand_dims(self.kernel, axis=2), mode='wrap')
         return img_L
 
 
@@ -99,8 +99,11 @@ class Resize:
         self.mode = self.mode_map[mode]
 
     def __call__(self, img):
-        return cv2.resize(img, (int(img.shape[1]*self.sf), int(img.shape[0]*self.sf)), interpolation=self.mode)
-
+        out = cv2.resize(img, (int(img.shape[1]*self.sf), int(img.shape[0]*self.sf)), interpolation=self.mode)
+        if out.ndim != img.ndim: # 2, 3
+            out = np.expand_dims(out, -1)
+        return out
+        
     mode_map = {
         'nearest': cv2.INTER_NEAREST,
         'linear': cv2.INTER_LINEAR,

@@ -15,11 +15,11 @@ log_levels = {
 
 
 class Logger:
-    def __init__(self, log_dir, enable_tensorboard=False, handlers=['console', 'file'],):
+    def __init__(self, log_dir, enable_tensorboard=False, handlers=['console', 'file'], name='Torchlight'):
         self.log_dir = Path(log_dir)
         self.tensorboard_ = None
         self.enable_tensorboard = enable_tensorboard
-        self.text = TextLogger('Torchlight', self.log_dir, handlers)
+        self.text = TextLogger(name, self.log_dir, handlers)
         self.img_dir = self.log_dir / 'img'
 
     @property
@@ -51,7 +51,7 @@ class Logger:
 def TextLogger(name, save_dir, handlers=['console', 'file'], verbosity='debug'):
     import colorlog
     save_dir = Path(save_dir)
-    save_dir.mkdir(exist_ok=True)
+    save_dir.mkdir(exist_ok=True, parents=True)
 
     msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(
         verbosity, log_levels.keys())
