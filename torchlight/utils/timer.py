@@ -3,7 +3,7 @@ import timeit
 time_units = {'ms': 1, 's': 1000, 'm': 60 * 1000, 'h': 3600 * 1000}
 
 
-class CodeTimer:
+class block_timer:
 
     def __init__(self, name=None, silent=False, unit='ms', logger_func=None):
         """
@@ -44,7 +44,7 @@ class CodeTimer:
         if not self.silent:
 
             # Craft a log message
-            self.log_message = 'Code block{}took: {:.5f} {}'.format(
+            self.log_message = 'Code block {} took: {:.5f} {}'.format(
                 str(" '" + self.name + "' ") if self.name else ' ',
                 float(self.took),
                 str(self.unit))
@@ -57,7 +57,7 @@ class CodeTimer:
 
 
 # function decorator style
-def linetimer(show_args=False, name=None, silent=False, unit='ms', logger_func=None):
+def line_timer(show_args=False, name=None, silent=False, unit='ms', logger_func=None):
     """
     Decorating a function will log how long it took to execute each function call
     Usage:
@@ -106,7 +106,7 @@ def linetimer(show_args=False, name=None, silent=False, unit='ms', logger_func=N
             else:
                 block_name = name
 
-            with CodeTimer(name=block_name, silent=silent, unit=unit, logger_func=logger_func):
+            with block_timer(name=block_name, silent=silent, unit=unit, logger_func=logger_func):
                 return func(*args, **kwargs)
 
         return wrapper
