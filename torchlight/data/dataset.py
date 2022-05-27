@@ -44,6 +44,7 @@ class ImageFolder(Dataset):
         path = self.img_paths[index]
         img = self.imread_uint(path, self.mode)
         img = img.astype('float32') / 255.0
+        img = img.transpose((2, 0, 1))
         return img, path
 
     def __len__(self):
@@ -69,6 +70,7 @@ class ImageFolder(Dataset):
             return img
 
         if mode == 'gray':
-            img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+            from imageio import imread
+            img = np.array(imread(path))
             img = np.expand_dims(img, axis=2)  # HW -> HW1
             return img

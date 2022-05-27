@@ -95,6 +95,13 @@ def rgb2bgr(img):
     return img[:, :, ::-1]
 
 
+def rgb2gray(img):
+    return np.dot(img[..., :3], [0.299, 0.587, 0.114])
+
+def imresize(img, height, width):
+    import cv2
+    return cv2.resize(img, (width, height))
+
 def usm_sharp(img, weight=0.5, radius=50, threshold=10):
     """USM sharpening.
     Input image: I; Blurry image: B.
