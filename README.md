@@ -36,7 +36,11 @@ pip install -e . # editable installation
 ## Useful Tools
 
 - [kornia](https://github.com/kornia/kornia): Open Source Differentiable Computer Vision Library.
+- [huggingface/datasets](https://github.com/huggingface/datasets/): original design for NLP, but also include some vision datasets.
 - [huggingface/accelerate](https://github.com/huggingface/accelerate/): A simple way to train and use PyTorch models with multi-GPU, TPU, mixed-precision.
 - [einops](https://github.com/arogozhnikov/einops): Flexible and powerful tensor operations for readable and reliable code.
-- [image-similarity-measures](https://github.com/up42/image-similarity-measures): Implementation of eight evaluation metrics to access the similarity between two images. The eight metrics are as follows: RMSE, PSNR, SSIM, ISSM, FSIM, SRE, SAM, and UIQ.
-- [huggingface/datasets](https://github.com/huggingface/datasets/): original design for NLP, but also include some vision datasets.
+- [torch-fidelity](https://github.com/toshas/torch-fidelity): High-fidelity performance metrics for generative models in PyTorch.
+- [piq](https://github.com/photosynthesis-team/piq): Measures and metrics for image2image tasks. PyTorch.
+- [image-similarity-measures](https://github.com/up42/image-similarity-measures): Numpy implementation of eight evaluation metrics to access the similarity between two images. The eight metrics are as follows: RMSE, PSNR, SSIM, ISSM, FSIM, SRE, SAM, and UIQ.
+- [ResizeRight](https://github.com/assafshocher/ResizeRight): The correct way to resize images or tensors. For Numpy or Pytorch (differentiable).
+- [omegaconf](https://github.com/omry/omegaconf): Flexible Python configuration system. The last one you will ever need.
