@@ -45,7 +45,7 @@ class DatasetTrain(Dataset):
         super(DatasetTrain, self).__init__()
 
         self.pathsA = full_path(imgA_dir, img_files(imgA_dir))
-        self.pathsB = full_path(imgA_dir, img_files(imgB_dir))
+        self.pathsB = full_path(imgB_dir, img_files(imgB_dir))
 
         lenA = len(self.pathsA)
         lenB = len(self.pathsB)
