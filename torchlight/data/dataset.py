@@ -74,3 +74,35 @@ class ImageFolder(Dataset):
             img = np.array(imread(path))
             img = np.expand_dims(img, axis=2)  # HW -> HW1
             return img
+
+
+class SingleImageDataset(ImageFolder):
+    def __init__(self, root, mode='keep', crop_size=None):
+        super().__init__(root, mode)
+        self.crop_size = crop_size
+
+    def __getitem__(self, index):
+        img, path = super().__getitem__(index)
+        if self.crop_size is not None:
+            img = rand_crop(img, self.crop_size[0], self.crop_size[1])
+        return img, path
+
+
+def rand_crop(img, croph, cropw):
+    import random
+    _, h, w = img.shape
+    h1 = random.randint(0, h - croph)
+    w1 = random.randint(0, w - cropw)
+    return img[:, h1:h1+croph, w1:w1+cropw]
+
+
+class PairImageDataset(SingleImageDataset):
+    def __init__(self, transform, root, mode='keep', crop_size=None):
+        super().__init__(root, mode, crop_size)
+        self.transform = transform
+
+    def __getitem__(self, index):
+        img, path = super().__getitem__(index)
+        trsfm_img = self.transform(img.transpose((1, 2, 0)))
+        trsfm_img = trsfm_img.transpose((2, 0, 1))
+        return trsfm_img, img, path
