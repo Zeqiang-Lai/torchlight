@@ -49,6 +49,24 @@ def mod_resize(img, base, mode=cv2.INTER_CUBIC):
     return cv2.resize(img, (w, h), interpolation=mode)
 
 
+def imresize(image, height=None, width=None, inter=cv2.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+
+    if width is None and height is None:
+        return image
+
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    return cv2.resize(image, dim, interpolation=inter)
+
+
 def hwc2chw(img):
     return img.transpose(2, 0, 1)
 
