@@ -52,7 +52,7 @@ def imread_float(path, mode):
     return img
 
 
-def imsave(path, img):
+def imsave(path, img, bgr=False):
     """ Save image or list of images to path. 
         - Assume value ranges from float [0,1], or uint8 [0,255], in RGB format.
         - list of images will be stacked horizontally.
@@ -65,7 +65,8 @@ def imsave(path, img):
     if img.dtype == np.float32 or img.dtype == np.float64:
         img = np.clip(img, 0, 1)
         img = (img * 255).astype('uint8')
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    if not bgr:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     cv2.imwrite(path, img)
 
 
