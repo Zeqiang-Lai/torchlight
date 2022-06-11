@@ -3,7 +3,9 @@
 [![Documentation Status](https://readthedocs.org/projects/torchlight/badge/?version=latest)](https://torchlight.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://img.shields.io/pypi/v/torchlights)](https://pypi.org/project/torchlights/)
 
-Torchlight is an ultra light-weight pytorch wrapper for fast prototyping of computer vision models.
+Torchlight provides  an light-weight PyTorch trainer, as well as many useful utils, including network components, transforms, metrics, etal. for fast prototyping of computer vision models.
+
+**:sparkles: All top level packages are self-contained and independent. Feel free to steal any part into your own project.**
 
 [![asciicast](https://asciinema.org/a/441271.svg)](https://asciinema.org/a/441271)
 
