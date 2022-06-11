@@ -86,3 +86,15 @@ class ConfigurableLossCalculator:
             loss_dict[name] = l.item()
             loss += l
         return loss, loss_dict
+
+
+def convert_ckpt(src, dst, src_keys, dst_keys):
+    import torch
+    ckpt = torch.load(src)
+    print('src', ckpt.keys())
+    ckpt['net'].pop('norm.body.weight')
+    ckpt['net'].pop('norm.body.bias')
+    module = {}
+    for ksrc, kdst in zip(src_keys, dst_keys):
+        module[kdst] = ckpt[ksrc]
+    torch.save({'module': module}, dst)

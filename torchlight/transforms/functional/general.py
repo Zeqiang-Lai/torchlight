@@ -110,3 +110,30 @@ def contrast_change(img, alpha):
 
 def rotate(img, k):
     return np.rot90(img, k)
+
+
+def usm_sharp(img, weight=0.5, radius=50, threshold=10):
+    """USM sharpening.
+    Input image: I; Blurry image: B.
+    1. sharp = I + weight * (I - B)
+    2. Mask = 1 if abs(I - B) > threshold, else: 0
+    3. Blur mask:
+    4. Out = Mask * sharp + (1 - Mask) * I
+    Args:
+        img (Numpy array): Input image, HWC, BGR; float32, [0, 1].
+        weight (float): Sharp weight. Default: 1.
+        radius (float): Kernel size of Gaussian blur. Default: 50.
+        threshold (int):
+    """
+    import cv2
+    if radius % 2 == 0:
+        radius += 1
+    blur = cv2.GaussianBlur(img, (radius, radius), 0)
+    residual = img - blur
+    mask = np.abs(residual) * 255 > threshold
+    mask = mask.astype('float32')
+    soft_mask = cv2.GaussianBlur(mask, (radius, radius), 0)
+
+    sharp = img + weight * residual
+    sharp = np.clip(sharp, 0, 1)
+    return soft_mask * sharp + (1 - soft_mask) * img
