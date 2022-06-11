@@ -47,7 +47,7 @@ def imread_uint(path, mode='keep'):
         return img
 
 
-def imread_float(path, mode):
+def imread_float(path, mode='keep'):
     img = imread_uint(path, mode)
     img = np.float32(img / 255.)
     return img
@@ -70,6 +70,13 @@ def imsave(path, img, bgr=False):
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     cv2.imwrite(path, img)
 
+
+def figsave(path, img, **kwargs):
+    """ Save an image with `matplotlib.pyplot`
+    """
+    import matplotlib.pyplot as plt
+    plt.imsave(path, img, **kwargs)
+    
 
 def anisave(img_list, filename='a.gif', fps=60):
     import matplotlib.pyplot as plt
