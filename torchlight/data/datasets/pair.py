@@ -40,9 +40,9 @@ def augmentation(aug, img):
 
 # datasets
 
-class DatasetTrain(Dataset):
+class PairDatasetTrain(Dataset):
     def __init__(self, imgA_dir, imgB_dir, patch_size):
-        super(DatasetTrain, self).__init__()
+        super(PairDatasetTrain, self).__init__()
 
         self.pathsA = full_path(imgA_dir, img_files(imgA_dir))
         self.pathsB = full_path(imgB_dir, img_files(imgB_dir))
@@ -95,7 +95,7 @@ class DatasetTrain(Dataset):
         return imgA, imgB
 
 
-class DatasetVal(DatasetTrain):
+class PairDatasetVal(PairDatasetTrain):
     def __init__(self, imgA_dir, imgB_dir, patch_size=None):
         super().__init__(imgA_dir, imgB_dir, patch_size)
 
@@ -120,9 +120,9 @@ class DatasetVal(DatasetTrain):
         return imgA, imgB
 
 
-class DatasetTest(Dataset):
+class PairDatasetTest(Dataset):
     def __init__(self, inp_dir):
-        super(DatasetTest, self).__init__()
+        super(PairDatasetTest, self).__init__()
 
         self.paths_inp = full_path(inp_dir, img_files(inp_dir))
         self.size = len(self.paths_inp)
