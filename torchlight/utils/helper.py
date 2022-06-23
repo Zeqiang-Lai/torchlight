@@ -1,9 +1,26 @@
 import json
+import os
+import sys
+from functools import partial
+from operator import attrgetter
 from pathlib import Path
 from collections import OrderedDict
-from functools import partial
-import os
-from operator import attrgetter
+
+__all__ = [
+    'get_cmd',
+    'instantiate',
+    'auto_rename'
+]
+
+
+def get_cmd():
+    """ get cmd that starts current script"""
+    args = ' '.join(sys.argv)
+    return f'python {args}'
+
+
+def instantiate(module, name, *args, **kwargs):
+    return attrgetter(name)(module)(*args, **kwargs)
 
 
 def get_obj(info, module, *args, **kwargs):
@@ -57,16 +74,21 @@ def write_json(content, fname):
         json.dump(content, handle, indent=4, sort_keys=False)
 
 
-def auto_rename(path):
+def auto_rename(path, ignore_ext=False):
     count = 1
     new_path = path
     while True:
         if not os.path.exists(new_path):
             return new_path
         file_name = os.path.basename(path)
-        name, ext = file_name.split('.')
-        new_file_name = '{}_{}.{}'.format(name, count, ext)
-        new_path = os.path.join(os.path.dirname(path), new_file_name)
+        try:
+            name, ext = file_name.split('.')
+            new_name = f'{name}_{count}.{ext}'
+        except:
+            new_name = f'{file_name}_{count}'
+        if ignore_ext:
+            new_name = f'{file_name}_{count}'
+        new_path = os.path.join(os.path.dirname(path), new_name)
         count += 1
 
 

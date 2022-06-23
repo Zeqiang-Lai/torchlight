@@ -115,11 +115,14 @@ class MetricTracker:
     def avg(self, key):
         return self._data[key]['total'] / self._data[key]['count']
 
+    def __getitem__(self, key):
+        return self.avg(key)
+
     def result(self):
         return {k: self._data[k]['total'] / self._data[k]['count'] for k in self._data.keys()}
 
-    def summary(self):
-        items = ['{}: {:.8f}'.format(k, v) for k, v in self.result().items()]
+    def summary(self, format_str='{}: {:.8f}'):
+        items = [format_str.format(k, v) for k, v in self.result().items()]
         return ' '.join(items)
 
 

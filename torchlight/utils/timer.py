@@ -1,6 +1,52 @@
 import timeit
 
+__all__ = [
+    'Timer',
+    'block_timer',
+    'line_timer',
+]
+
+
 time_units = {'ms': 1, 's': 1000, 'm': 60 * 1000, 'h': 3600 * 1000}
+
+
+def format_time(t):
+    fmt_str = ''
+    
+    ms = t % 1000
+    fmt_str += f'{ms}ms'
+    
+    t = t // 1000 
+    second = t % 60
+    if t == 0: return fmt_str
+    fmt_str += f'{second}s'
+        
+    t = t // 60
+    minutes = t % 60
+    if t == 0: return fmt_str
+    fmt_str += f'{minutes}m'
+    
+    t = t // 60
+    hours = t
+    if t == 0: return fmt_str
+    fmt_str += f'{hours}h'
+    
+    return fmt_str
+
+
+class Timer:
+    def __init__(self):
+        self._start_time = 0
+
+    def tic(self):
+        self.start = timeit.default_timer()
+
+    def toc(self):
+        used = int((timeit.default_timer() - self.start) * 1000)
+        return used
+
+
+timer = Timer()
 
 
 class block_timer:

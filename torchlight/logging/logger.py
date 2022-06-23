@@ -46,6 +46,11 @@ class Logger:
         from .visualization import save_image
         save_image(img, save_path)
 
+    def save_any(self, name, callback):
+        save_path: Path = self.img_dir / name
+        if not save_path.parent.exists():
+            save_path.parent.mkdir(parents=True)
+        callback(save_path)
 
 
 def TextLogger(name, save_dir, handlers=['console', 'file'], verbosity='debug'):
