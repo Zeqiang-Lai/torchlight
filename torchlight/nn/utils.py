@@ -57,10 +57,13 @@ def freeze(module: nn.Module):
 
 
 def adjust_learning_rate(optimizer, lr):
-    print('Adjust Learning Rate => %.4e' % lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
-        # param_group['initial_lr'] = lr
+
+
+def get_learning_rate(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
 
 
 def prepare_device(n_gpu_use):
