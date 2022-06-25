@@ -1,10 +1,13 @@
 import numpy as np
 
-__all__  = [
+__all__ = [
     'imread_uint',
     'imread_float',
     'imsave',
     'anisave',
+    'filewrite',
+    'yamlwrite',
+    'txt'
 ]
 
 
@@ -76,7 +79,7 @@ def figsave(path, img, **kwargs):
     """
     import matplotlib.pyplot as plt
     plt.imsave(path, img, **kwargs)
-    
+
 
 def anisave(img_list, filename='a.gif', fps=60):
     import matplotlib.pyplot as plt
@@ -94,3 +97,29 @@ def anisave(img_list, filename='a.gif', fps=60):
         ims += animation_generate(img)
     ani = animation.ArtistAnimation(fig, ims)
     ani.save(filename, fps=fps, writer='ffmpeg')
+
+
+def filewrite(path, content):
+    """ Unified interface for saving content to file according to extension.\\
+        Support extensions:
+            - yaml, yml
+            - json
+            - txt
+    """
+    if path.endswith('.yaml') or path.endswith('.yml'):
+        yamlwrite(path, content)
+    elif path.endswith('.txt') or path.endswith('.log'):
+        txtwrite(path, content)
+    else:
+        raise ValueError('Unrecognized extension, support [yaml, yml, json, txt, log]')
+
+
+def yamlwrite(path, obj):
+    import yaml
+    with open(path, 'w') as f:
+        yaml.dump(obj, f)
+
+
+def txtwrite(path, content):
+    with open(path, 'w') as f:
+        f.write(content+'\n')
