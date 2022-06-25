@@ -42,7 +42,7 @@ def run_lazy(args, cfg, module: Module, data_source: DataSource):
         write_yaml(cfg, os.path.join(args.save_dir, 'config.yaml'))  # override the default config.yaml
 
         if args.resume:
-            engine.resume(args.resume, base_dir=args.resume_dir)
+            engine.resume(args.resume)
         engine.train(data_source.train_loader(), valid_loader=data_source.valid_loader())
     elif args.mode == 'test':
         test_loader = data_source.test_loader()

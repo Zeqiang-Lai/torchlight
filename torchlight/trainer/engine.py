@@ -72,10 +72,15 @@ class Engine:
     def set_debug_mode(self):
         self.debug_mode = True
 
-    def resume(self, model_name, base_dir=None):
-        ckpt_dir = self.experiment.ckpt_dir if base_dir is None else Experiment(base_dir).ckpt_dir
-        resume_path = ckpt_dir / 'model-{}.pth'.format(model_name)
-        assert resume_path.exists(), '{} not found'.format(resume_path)
+    def resume(self, ckpt):
+        from contextlib import suppress
+        if os.path.exists(ckpt):
+            with suppress(Exception): 
+                self._resume_checkpoint(ckpt) 
+                return self
+                
+        ckpt_dir = self.experiment.ckpt_dir 
+        resume_path = ckpt_dir / 'model-{}.pth'.format(ckpt)
         self._resume_checkpoint(resume_path)
         return self
 
