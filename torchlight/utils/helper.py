@@ -8,8 +8,12 @@ from collections import OrderedDict
 
 __all__ = [
     'get_cmd',
+    'instantiate_from',
     'instantiate',
-    'auto_rename'
+    'get_class',
+    'auto_rename',
+    'dict_get',
+    'dict_set',
 ]
 
 
@@ -19,8 +23,64 @@ def get_cmd():
     return f'python {args}'
 
 
-def instantiate(module, name, *args, **kwargs):
+def instantiate_from(module, name, *args, **kwargs):
+    """ instantiate a class or call a function with given args and kwargs 
+        from `a given module`.
+
+        Example:
+            `instantiate(model, 'resnet.big', channel=10)`
+            return `model.resnet.big(channel=10)`
+    """
     return attrgetter(name)(module)(*args, **kwargs)
+
+
+def instantiate(path, *args, **kwargs):
+    """ instantiate a class or call a function with given args and kwargs 
+        from `anywhere`.
+
+        Example:
+            `instantiate('module.a.B', t=1e-3)`
+            return `module.a.B(t=1e-3)`
+    """
+    from pydoc import locate
+    obj = locate(path)
+    return obj(*args, **kwargs)
+
+
+def get_class(path, *args, **kwargs):
+    """ return partial(cls, *args, **kwargs)
+        cls is obtain via given path
+    """
+    from pydoc import locate
+    obj = locate(path)
+    return partial(obj, *args, **kwargs)
+
+
+def dict_get(dictionary, path):
+    path = path[1:] if path.startswith('/') else path
+    paths = path.split('/')
+    active_dict = dictionary
+    for p in paths:
+        if active_dict.get(p) != None:
+            active_dict = active_dict.get(p)
+        else:
+            return None
+    return active_dict
+
+
+def dict_set(dictionary, path, value):
+    path = path[1:] if path.startswith('/') else path
+    paths = path.split('/')
+    path_len = len(paths)
+    _active_dict = dictionary
+    for i, p in enumerate(paths):
+        if i == path_len - 1:
+            _active_dict[p] = value
+        else:
+            if _active_dict.get(p) == None:
+                _active_dict[p] = {}
+            _active_dict = _active_dict.get(p)
+    return dictionary
 
 
 def get_obj(info, module, *args, **kwargs):

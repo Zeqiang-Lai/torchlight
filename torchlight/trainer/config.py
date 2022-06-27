@@ -16,6 +16,82 @@ from .util import action_confirm
 init(autoreset=True)
 
 
+class Args:
+    """ Default arg parser.\\
+        You should get args and config from yaml via 
+        ```
+            args, cfg = Args('test').parse()
+        ```
+        Add custom args via \\
+        ```
+            args = Args('test')
+            args.parser.add_argument(...)
+        ```
+    """
+
+    def __init__(self, description='', parse_mode=False):
+        parser = argparse.ArgumentParser(description=description)
+        parser.add_argument('-c', '--config', nargs='*', default=None, type=str,
+                            help='config file(s) path (default: None)')
+        parser.add_argument('-r', '--resume', default=None, type=str,
+                            help='resume to # checkpoint (default: None), e.g. best | latest | epoch# or a complete path')
+        parser.add_argument('-d', '--device', default='cuda', type=str,
+                            help='indices of GPUs to enable (default: cuda)')
+        parser.add_argument('-s', '--save_dir', default='saved', type=str, required=True,
+                            help='path of log directory (default: saved)')
+        parser.add_argument('-n', '--new_save_dir', default=None, type=str,
+                            help='path of new log directory (default: new_saved)')
+        parser.add_argument('--override', default=None, type=str,
+                            help='custom value to override the corrsponding key in config file.'
+                            'format: "key.key=value; key2=value2", each KV pair must be seperate by a semicolon.')
+        parser.add_argument('--reset', action='store_true', default=False,
+                            help='remove the old log dir if exists, only used in train mode')
+
+        if parse_mode:
+            parser.add_argument('mode', type=str, help='running mode',
+                                choices=['train', 'test', 'debug'])
+
+        self.parse_mode = parse_mode
+        self.parser = parser
+
+    def parse(self):
+        args = self.parser.parse_args()
+        vars(args)['resume_dir'] = args.save_dir
+        if args.new_save_dir is not None:
+            args.save_dir = args.new_save_dir
+
+        if self.parse_mode and args.mode == 'train' and args.reset:
+            if os.path.exists(args.save_dir) and \
+                    action_confirm(Fore.RED + f'Do you really want to reset the old log?\nPath=({args.save_dir})'):
+                shutil.rmtree(args.save_dir)
+
+        if self.parse_mode and args.mode == 'test':
+            assert args.resume is not None, 'resume cannot be None in test mode'
+
+        if args.resume:
+            if args.config and args.new_save_dir:
+                cfg = read_config(args.config)
+            else:
+                resume_config_path = Path(args.resume_dir) / 'config.yaml'
+                if not os.path.exists(resume_config_path) and not args.config:
+                    raise ValueError('You must provide a config file via -c or have a config.yaml \
+                        in the save directory.')
+
+                cfg = read_config(args.config) if args.config else {}
+                cfg_add = read_yaml(resume_config_path) if os.path.exists(resume_config_path) else {}
+                deep_update(cfg, cfg_add)
+        else:
+            if args.config is None:
+                print(Fore.RED + 'Warning: default config not founded, forgot to specify a configuration file?')
+                cfg = {'engine': {}}
+            else:
+                cfg = read_config(args.config)
+
+        _set_custom_args(cfg, args.override)
+
+        return args, Munch.fromDict(cfg)
+
+
 def basic_args(description=''):
     """
     fresh new training:
@@ -31,57 +107,8 @@ def basic_args(description=''):
         python run.py test -s [save_dir] -r best -c config.yaml # test won't override the original config, but save the override config in test directory
         python run.py test -s [save_dir] -r best -n new_save_dir # save in a new place
     """
-
-    args = argparse.ArgumentParser(description=description)
-    args.add_argument('mode', type=str, help='running mode',
-                      choices=['train', 'test', 'debug'])
-    args.add_argument('-c', '--config', nargs='*', default=None, type=str,
-                      help='config file(s) path (default: None)')
-    args.add_argument('-r', '--resume', default=None, type=str,
-                      help='resume to # checkpoint (default: None), e.g. best | latest | epoch# or a complete path')
-    args.add_argument('-d', '--device', default='cuda', type=str,
-                      help='indices of GPUs to enable (default: cuda)')
-    args.add_argument('-s', '--save_dir', default='saved', type=str, required=True,
-                      help='path of log directory (default: saved)')
-    args.add_argument('-n', '--new_save_dir', default=None, type=str,
-                      help='path of new log directory (default: new_saved)')
-    args.add_argument('--override', default=None, type=str,
-                      help='custom value to override the corrsponding key in config file.'
-                      'format: "key.key=value; key2=value2", each KV pair must be seperate by a semicolon.')
-    args.add_argument('--reset', action='store_true', default=False,
-                      help='remove the old log dir if exists, only used in train mode')
-    args = args.parse_args()
-
-    vars(args)['resume_dir'] = args.save_dir
-    if args.new_save_dir is not None:
-        args.save_dir = args.new_save_dir
-
-    if args.mode == 'train' and args.reset:
-        if os.path.exists(args.save_dir) and \
-                action_confirm(Fore.RED + f'Do you really want to reset the old log?\nPath=({args.save_dir})'):
-            shutil.rmtree(args.save_dir)
-
-    if args.mode == 'test':
-        assert args.resume is not None, 'resume cannot be None in test mode'
-
-    if args.resume:
-        if args.config and args.new_save_dir:
-            cfg = read_config(args.config)
-        else:
-            resume_config_path = Path(args.resume_dir) / 'config.yaml'
-            cfg = read_yaml(resume_config_path)
-            if args.config:
-                deep_update(cfg, read_config(args.config))
-    else:
-        if args.config is None:
-            print(Fore.RED + 'Warning: default config not founded, forgot to specify a configuration file?')
-            cfg = {'engine': {}}
-        else:
-            cfg = read_config(args.config)
-
-    _set_custom_args(cfg, args.override)
-
-    return args, Munch.fromDict(cfg)
+    args = Args(description, parse_mode=True)
+    return args.parse()
 
 
 def deep_update(source, overrides):
@@ -105,7 +132,7 @@ def read_config(configs):
     base_dir = os.path.dirname(configs[0])
     for config in configs:
         # if without extension, append it
-        if not config.endswith('.yaml'):
+        if not config.endswith('.yaml') and not config.endswith('.yml'):
             config = config + '.yaml'
         # if file not exists, try add base_dir
         if not os.path.exists(config):

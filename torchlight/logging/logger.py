@@ -90,7 +90,9 @@ class Handler:
         handler = logging.handlers.RotatingFileHandler(filename, maxBytes=10485760,
                                                        backupCount=20, encoding='utf-8')
         handler.setLevel(level)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s',
+                                       "%Y-%m-%d %H:%M:%S")
+        # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         return handler
 

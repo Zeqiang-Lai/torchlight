@@ -12,6 +12,7 @@ time_units = {'ms': 1, 's': 1000, 'm': 60 * 1000, 'h': 3600 * 1000}
 
 def format_time(t):
     fmt_str = ''
+    t = int(t)
     
     ms = t % 1000
     fmt_str += f'{ms}ms'
