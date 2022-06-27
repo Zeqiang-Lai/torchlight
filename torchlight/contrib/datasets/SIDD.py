@@ -1,9 +1,9 @@
 from os.path import join
 
-from ..pair import PairDatasetTrain, PairDatasetVal
+from torchlight.data.datasets.pair import PairDatasetTrain, PairDatasetVal
 
 
-class Train(PairDatasetTrain):
+class SIDDTrain(PairDatasetTrain):
     def __init__(self, basedir, patch_size):
         basedir = join(basedir, 'train')
         imgA_dir = join(basedir, 'input')
@@ -11,7 +11,7 @@ class Train(PairDatasetTrain):
         super().__init__(imgA_dir, imgB_dir, patch_size)
 
 
-class Valid(PairDatasetVal):
+class SIDDValid(PairDatasetVal):
     def __init__(self, basedir, patch_size=None):
         basedir = join(basedir, 'valid')
         imgA_dir = join(basedir, 'input')
