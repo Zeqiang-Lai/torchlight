@@ -3,7 +3,7 @@ examples/mnist/experiments
 examples/mnist/MNIST
 examples/mnist/raw
 examples/mnist/processed
-
+*.png
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
