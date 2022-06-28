@@ -13,51 +13,37 @@ time_units = {'ms': 1, 's': 1000, 'm': 60 * 1000, 'h': 3600 * 1000}
 def format_time(t):
     fmt_str = ''
     t = int(t)
-    
+
     ms = t % 1000
     fmt_str += f'{ms}ms'
-    
-    t = t // 1000 
+
+    t = t // 1000
     second = t % 60
     if t == 0: return fmt_str
     fmt_str += f'{second}s'
-        
+
     t = t // 60
     minutes = t % 60
     if t == 0: return fmt_str
     fmt_str += f'{minutes}m'
-    
+
     t = t // 60
     hours = t
     if t == 0: return fmt_str
     fmt_str += f'{hours}h'
-    
+
     return fmt_str
-
-
-class Timer:
-    def __init__(self):
-        self._start_time = 0
-
-    def tic(self):
-        self.start = timeit.default_timer()
-
-    def toc(self):
-        used = int((timeit.default_timer() - self.start) * 1000)
-        return used
-
-
-timer = Timer()
 
 
 class block_timer:
 
     def __init__(self, name=None, silent=False, unit='ms', logger_func=None):
         """
-        :param name: A custom name given to a code block
-        :param silent: When True, does not print or log any messages
-        :param unit: Units to measure time. One of ['ms', 's', 'm', 'h']
-        :param logger_func: A function that takes a string parameter that is called at the end of the indented block.
+        Args:
+            - name: A custom name given to a code block
+            - silent: When True, does not print or log any messages
+            - unit: Units to measure time. One of ['ms', 's', 'm', 'h']
+            - logger_func: A function that takes a string parameter that is called at the end of the indented block.
                 If specified, messages will not be printed to console.
         """
 
@@ -66,15 +52,15 @@ class block_timer:
         self.unit = unit
         self.logger_func = logger_func
         self.log_str = None
+        self.took = 0
 
     def __enter__(self):
         """
-        Start measuring at the start of indent
-        :return: CodeTimer object
+        Start measuring at the start of indent \\
+        return: CodeTimer object
         """
 
         self.start = timeit.default_timer()
-
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -83,17 +69,16 @@ class block_timer:
         """
 
         # Record elapsed time
-        self.took = (timeit.default_timer() - self.start) * 1000.0
-
-        # Convert time units
-        self.took = self.took / time_units.get(self.unit, time_units['ms'])
+        self.took = int((timeit.default_timer() - self.start) * 1000)
 
         if not self.silent:
+
+            took = self.took / time_units.get(self.unit, time_units['ms'])
 
             # Craft a log message
             self.log_message = 'Code block {} took: {:.5f} {}'.format(
                 str(" '" + self.name + "' ") if self.name else ' ',
-                float(self.took),
+                float(took),
                 str(self.unit))
 
             if self.logger_func:
@@ -159,3 +144,33 @@ def line_timer(show_args=False, name=None, silent=False, unit='ms', logger_func=
         return wrapper
 
     return decorator
+
+
+class Timer:
+    def __init__(self):
+        self._start_time = 0
+        self._intervals = {}
+
+    def tic(self):
+        self.start = timeit.default_timer()
+
+    def toc(self):
+        used = int((timeit.default_timer() - self.start) * 1000)
+        return used
+
+    def interval(self, name):
+        timer = block_timer(name, silent=True)
+        self._intervals[name] = timer
+        return timer
+
+    def items(self):
+        items = {}
+        for name, timer in self._intervals.items():
+            items[name] = timer.took
+        return items
+
+    def __getitem__(self, name):
+        return self._intervals[name].took
+
+
+timer = Timer()
