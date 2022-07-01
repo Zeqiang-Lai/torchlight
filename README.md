@@ -24,6 +24,9 @@ git clone https://github.com/Zeqiang-Lai/torchlight.git
 cd torchlight
 pip install .
 pip install -e . # editable installation
+
+# or simply if you don't need editable installation
+pip install git+https://github.com/Zeqiang-Lai/torchlight.git
 ```
 
 ## Features
