@@ -108,6 +108,8 @@ def filewrite(path, content):
     """
     if path.endswith('.yaml') or path.endswith('.yml'):
         yamlwrite(path, content)
+    elif path.endswith('.json'):
+        jsonwrite(path, content)
     elif path.endswith('.txt') or path.endswith('.log'):
         txtwrite(path, content)
     else:
@@ -119,6 +121,10 @@ def yamlwrite(path, obj):
     with open(path, 'w') as f:
         yaml.dump(obj, f)
 
+def jsonwrite(path, obj):
+    import json
+    with open(path, 'w') as f:
+        json.dump(obj, f)
 
 def txtwrite(path, content):
     with open(path, 'w') as f:
