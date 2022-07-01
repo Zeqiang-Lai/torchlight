@@ -11,8 +11,10 @@ import numpy as np
 # https://pytorch.org/docs/stable/notes/randomness.html
 
 
-def setup_randomness(seed=1234, deterministic=True):
+def seed_everything(seed, deterministic=True):
     torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     random.seed(seed)
     np.random.seed(seed)
 
