@@ -8,8 +8,12 @@ from qqdm import qqdm
 from colorama import Fore, init
 
 from torchlight.logging.logger import Logger
+
 from .module import Module
-from .util import Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner, text_divider, format_num, action_confirm
+from .util import (
+    Timer, MetricTracker, PerformanceMonitor, CheckpointCleaner,
+    text_divider, format_num, action_confirm
+)
 
 init(autoreset=True)
 
@@ -75,11 +79,11 @@ class Engine:
     def resume(self, ckpt):
         from contextlib import suppress
         if os.path.exists(ckpt):
-            with suppress(Exception): 
-                self._resume_checkpoint(ckpt) 
+            with suppress(Exception):
+                self._resume_checkpoint(ckpt)
                 return self
-                
-        ckpt_dir = self.experiment.ckpt_dir 
+
+        ckpt_dir = self.experiment.ckpt_dir
         resume_path = ckpt_dir / 'model-{}.pth'.format(ckpt)
         self._resume_checkpoint(resume_path)
         return self
@@ -118,7 +122,7 @@ class Engine:
         # ------------------ Print logged informations to the screen ----------------- #
         if valid_loader is not None and (epoch % self.cfg.valid_per_epoch == 0 or self.debug_mode):
             val_log = self._valid_epoch(epoch, valid_loader)
-            log.update(**{'val_'+k: v for k, v in val_log.items()})
+            log.update(**{'val_' + k: v for k, v in val_log.items()})
 
         if self.debug_mode:
             return
@@ -144,14 +148,14 @@ class Engine:
 
     def test(self, test_loader, name=None):
         old_logger = self.logger
-        self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch-1)
+        self.test_log_dir = self.experiment.save_dir / 'test' / 'epoch{}'.format(self.epoch - 1)
         if name is not None:
             self.test_log_dir = self.test_log_dir / name
         self.test_log_dir.mkdir(parents=True, exist_ok=True)
         self.logger = Logger(self.test_log_dir)
 
         val_log = self._valid_epoch(1, test_loader)
-        log = {'test_'+k: v for k, v in val_log.items()}
+        log = {'test_' + k: v for k, v in val_log.items()}
 
         self._log_log(log)
 
@@ -289,7 +293,7 @@ class Engine:
         resume_path = str(resume_path)
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
         checkpoint = torch.load(resume_path)
-        
+
         if 'epoch' in checkpoint:
             self.start_epoch = checkpoint['epoch'] + 1
         else:
@@ -303,7 +307,7 @@ class Engine:
 
         self.module.load_state_dict(checkpoint['module'])
 
-        self.logger.info("Checkpoint loaded. Resume from epoch {}".format(self.start_epoch-1))
+        self.logger.info("Checkpoint loaded. Resume from epoch {}".format(self.start_epoch - 1))
 
     def _progress_bar(self, total):
         if self.cfg.pbar == 'qqdm':
@@ -322,6 +326,6 @@ class Engine:
 
 
 def _progress(batch_idx, loader):
-    current = batch_idx * loader.batch_size
-    total = len(loader) * loader.batch_size
+    current = batch_idx
+    total = len(loader)
     return '[{}/{} ({:.0f}%)]'.format(current, total, 100.0 * current / total)
