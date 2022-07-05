@@ -11,13 +11,14 @@ import numpy as np
 # https://pytorch.org/docs/stable/notes/randomness.html
 
 
-def seed_everything(seed, deterministic=True):
+def seed_everything(seed, deterministic=False, set_cuda=False):
     torch.manual_seed(seed)
+    # random.seed(seed)
+    # np.random.seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    random.seed(seed)
-    np.random.seed(seed)
 
+    if set_cuda:
+        torch.cuda.manual_seed_all(seed)
     if deterministic:
         torch.backends.cudnn.benchmark = False
         torch.use_deterministic_algorithms(True)
@@ -43,7 +44,7 @@ class SeedDataLoader(DataLoader):
                  sampler: Optional[Sampler[int]] = None,
                  batch_sampler: Optional[Sampler[Sequence[int]]] = None,
                  num_workers: int = 0,
-                 collate_fn = None,
+                 collate_fn=None,
                  pin_memory: bool = False,
                  drop_last: bool = False,
                  timeout: float = 0,

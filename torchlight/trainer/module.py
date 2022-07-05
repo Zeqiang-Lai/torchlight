@@ -27,7 +27,7 @@ class Module(ABC):
     # ---------------------------------------------------------------------------- #
 
     @abstractmethod
-    def step(self, data, train, epoch, step) -> StepResult:
+    def step(self, data, train, epoch, step, **kwargs) -> StepResult:
         """ return a StepResult that contains the imgs and metrics you want to save and log """
         raise NotImplementedError
 
@@ -43,10 +43,10 @@ class Module(ABC):
     #                                Callback hooks                                #
     # ---------------------------------------------------------------------------- #
 
-    def on_epoch_start(self, train):
+    def on_epoch_start(self, train, epoch, loader, **kwargs):
         pass
 
-    def on_epoch_end(self, train):
+    def on_epoch_end(self, train, epoch, loader, **kwargs):
         pass
 
 

@@ -88,14 +88,14 @@ class Engine:
         self._resume_checkpoint(resume_path)
         return self
 
-    def train(self, train_loader, valid_loader=None):
+    def train(self, train_loader, valid_loader=None, **kwargs):
         """
         Full training logic
         """
         for epoch in range(self.start_epoch, self.cfg.max_epochs + 1):
             self._show_divider('=', text='Epoch[{}]'.format(epoch))
             try:
-                self._train(train_loader, epoch, valid_loader)
+                self._train(train_loader, epoch, valid_loader, **kwargs)
             except KeyboardInterrupt:
                 msg = Fore.RED + "Oops!" + Fore.RESET + " Training was terminated by Ctrl-C. "
                 "Do you want to save the latest checkpoint?"
@@ -110,9 +110,9 @@ class Engine:
                 break
 
     # TODO: use this function to support mannuly control training dataloader outside of engine
-    def _train(self, train_loader, epoch, valid_loader=None):
+    def _train(self, train_loader, epoch, valid_loader=None, **kwargs):
         timer.tic()
-        result = self._train_epoch(epoch, train_loader)
+        result = self._train_epoch(epoch, train_loader, **kwargs)
         self.epoch = epoch
 
         # ------------------ Save logged informations into log dict ------------------ #
@@ -167,7 +167,7 @@ class Engine:
             self.logger.info('    {:15s}: {}'.format(str(key), value))
         self._show_divider('-')
 
-    def _train_epoch(self, epoch, train_loader):
+    def _train_epoch(self, epoch, train_loader, **kwargs):
         """
         Training logic for an epoch
 
@@ -175,16 +175,17 @@ class Engine:
         :return: A log that contains average loss and met
         ric in this epoch.
         """
-
-        self.module.on_epoch_start(train=True)
         
         metric_tracker = MetricTracker()
         len_epoch = len(train_loader)
+        
+        self.module.on_epoch_start(train=True, epoch=epoch, loader=train_loader, **kwargs)
+        
         pbar = self._progress_bar(total=len_epoch)
         pbar.set_description('Train [{}|{}]'.format(epoch, self.cfg.max_epochs))
         for batch_idx, data in enumerate(train_loader):
             gstep = (epoch - 1) * len_epoch + batch_idx + 1
-            results = self.module.step(data, train=True, epoch=epoch, step=gstep)
+            results = self.module.step(data, train=True, epoch=epoch, step=gstep, **kwargs)
 
             self.logger.tensorboard.set_step(gstep, mode='train')
             for name, value in results.metrics.items():
@@ -211,7 +212,7 @@ class Engine:
                 break
 
         pbar.close()
-        self.module.on_epoch_end(train=True)
+        self.module.on_epoch_end(train=True, epoch=epoch, loader=train_loader, **kwargs)
 
         return metric_tracker.result()
 
@@ -225,11 +226,12 @@ class Engine:
         import torch
 
         metric_tracker = MetricTracker()
-
         len_epoch = len(valid_loader)
+        
+        self.module.on_epoch_start(train=False, epoch=epoch, loader=valid_loader)
+        
         pbar = self._progress_bar(total=len_epoch)
         pbar.set_description('Valid [{}|{}]'.format(epoch, self.cfg.max_epochs))
-        self.module.on_epoch_start(train=False)
         with torch.no_grad():
             len_epoch = len(valid_loader)
             for batch_idx, data in enumerate(valid_loader):
@@ -258,7 +260,7 @@ class Engine:
                 if self.debug_mode:
                     break
             pbar.close()
-        self.module.on_epoch_end(train=False)
+        self.module.on_epoch_end(train=False, epoch=epoch, loader=valid_loader)
         return metric_tracker.result()
 
     def _save_checkpoint(self, epoch, postfix=None):
