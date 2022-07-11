@@ -99,7 +99,7 @@ def anisave(img_list, filename='a.gif', fps=60):
     ani.save(filename, fps=fps, writer='ffmpeg')
 
 
-def filewrite(path, content):
+def filewrite(path, content, mode='w'):
     """ Unified interface for saving content to file according to extension.\\
         Support extensions:
             - yaml, yml
@@ -107,25 +107,25 @@ def filewrite(path, content):
             - txt
     """
     if path.endswith('.yaml') or path.endswith('.yml'):
-        yamlwrite(path, content)
+        yamlwrite(path, content, mode)
     elif path.endswith('.json'):
-        jsonwrite(path, content)
+        jsonwrite(path, content, mode)
     elif path.endswith('.txt') or path.endswith('.log'):
-        txtwrite(path, content)
+        txtwrite(path, content, mode)
     else:
         raise ValueError('Unrecognized extension, support [yaml, yml, json, txt, log]')
 
 
-def yamlwrite(path, obj):
+def yamlwrite(path, obj, mode='w'):
     import yaml
-    with open(path, 'w') as f:
+    with open(path, mode) as f:
         yaml.dump(obj, f)
 
-def jsonwrite(path, obj):
+def jsonwrite(path, obj, mode='w'):
     import json
-    with open(path, 'w') as f:
+    with open(path, mode) as f:
         json.dump(obj, f)
 
-def txtwrite(path, content):
-    with open(path, 'w') as f:
+def txtwrite(path, content, mode='w'):
+    with open(path, mode) as f:
         f.write(content+'\n')
