@@ -1,4 +1,6 @@
 import time
+import torch
+
 def measure_inference_speed(model, data, max_iter=200, log_interval=50):
     model.eval()
 
@@ -38,9 +40,9 @@ def measure_inference_speed(model, data, max_iter=200, log_interval=50):
             break
     return fps
 
-def print_model_size_torch(model):
+def model_size(model):
     total = sum([param.nelement() for param in model.parameters()])
-    print("Number of parameter: %.2fM" % (total/1e6))
+    return total/1e6
 
 
     # def __str__(self):
