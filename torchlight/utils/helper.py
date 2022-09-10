@@ -10,6 +10,7 @@ __all__ = [
     'get_cmd',
     'instantiate_from',
     'instantiate',
+    'locate',
     'get_class',
     'auto_rename',
     'dict_get',
@@ -45,6 +46,12 @@ def instantiate(path, *args, **kwargs):
     from pydoc import locate
     obj = locate(path)
     return obj(*args, **kwargs)
+
+
+def locate(path):
+    from pydoc import locate
+    obj = locate(path)
+    return obj
 
 
 def get_class(path, *args, **kwargs):
