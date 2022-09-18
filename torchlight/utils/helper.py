@@ -8,6 +8,7 @@ from collections import OrderedDict
 
 __all__ = [
     'get_cmd',
+    'get_datetime',
     'instantiate_from',
     'instantiate',
     'get_class',
@@ -22,6 +23,10 @@ def get_cmd():
     args = ' '.join(sys.argv)
     return f'python {args}'
 
+def get_datetime():
+    from datetime import datetime
+    dtstr = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    return dtstr
 
 def instantiate_from(module, name, *args, **kwargs):
     """ instantiate a class or call a function with given args and kwargs 

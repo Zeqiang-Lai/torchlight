@@ -121,10 +121,15 @@ def yamlwrite(path, obj, mode='w'):
     with open(path, mode) as f:
         yaml.dump(obj, f)
 
+def jsonload(path, mode='r'):
+    import json
+    with open(path, mode) as f:
+        return json.load(f)
+        
 def jsonwrite(path, obj, mode='w'):
     import json
     with open(path, mode) as f:
-        json.dump(obj, f)
+        json.dump(obj, f, indent=4)
 
 def txtwrite(path, content, mode='w'):
     with open(path, mode) as f:
