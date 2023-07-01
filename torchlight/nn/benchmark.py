@@ -1,6 +1,7 @@
 import time
 import torch
 
+
 def measure_inference_speed(model, data, max_iter=200, log_interval=50):
     model.eval()
 
@@ -40,15 +41,14 @@ def measure_inference_speed(model, data, max_iter=200, log_interval=50):
             break
     return fps
 
-def model_size(model):
-    total = sum([param.nelement() for param in model.parameters()])
+
+def model_size(model, trainable=False):
+    if trainable:
+        total = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    else:
+        total = sum([param.nelement() for param in model.parameters()])
+    return total / 1e6
+
+def trainable_model_size(model):
+    total = sum([param.nelement() for param in model.parameters() if param.requires_grad])
     return total/1e6
-
-
-    # def __str__(self):
-    #     """
-    #     Model prints with number of trainable parameters
-    #     """
-    #     model_parameters = filter(lambda p: p.requires_grad, self.parameters())
-    #     params = sum([np.prod(p.size()) for p in model_parameters])
-    #     return super().__str__() + '\nTrainable parameters: {}'.format(params)
