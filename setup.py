@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='torchlights',
     packages=find_packages(),
-    version='0.3.8',
+    version='0.4.0',
     description='Torchlights - an light-weight PyTorch trainer, as well as many useful utils',
     author='Zeqiang Lai',
     author_email='laizeqiang@outlook.com',
