@@ -121,9 +121,14 @@ class MetricTracker:
     def result(self):
         return {k: self._data[k]['total'] / self._data[k]['count'] for k in self._data.keys()}
 
-    def summary(self, format_str='{}: {:.8f}'):
-        items = [format_str.format(k, v) for k, v in self.result().items()]
-        return ' '.join(items)
+    def summary(self, format_str='{:.3f}', return_dict=False):
+        if return_dict:
+            items = {k: format_str.format(v) for k, v in self.result().items()}
+            return items
+        else:
+            format_str = '{}: ' + format_str
+            items = [format_str.format(k, v) for k, v in self.result().items()]
+            return ' '.join(items)
 
 
 class PerformanceMonitor:

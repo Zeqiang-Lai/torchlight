@@ -62,7 +62,7 @@ def enable_batch_input(reduce=True):
         def warpped(output, target, *args, **kwargs):
             if len(output.shape) == 4:
                 b = output.shape[0]
-                out = [func(output[i], target[i]) for i in range(b)]
+                out = [func(output[i], target[i], *args, **kwargs) for i in range(b)]
                 if reduce:
                     return sum(out) / len(out)
                 return out
